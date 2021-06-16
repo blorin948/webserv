@@ -1,75 +1,79 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <iostream>
-#include <sstream> 
-#include <fstream>
-#include "parsing/parsing.hpp"
+#include "Webserv.h"
+#define PORT 8000
 
-#define PORT 8080
-
-
-std::string&					pop(std::string& str)
-{
-	if (str.size())
-		str.resize(str.size() - 1);
-	return str;
-}
-
-std::string			nextLine(const std::string &str, size_t& i)
-{
-	std::string		ret;
-	size_t			j;
-
-	if (i == std::string::npos)
-		return "";
-	j = str.find_first_of('\n', i);
-	ret = str.substr(i, j - i);
-	if (ret[ret.size() - 1] == '\r')
-		pop(ret);
-	i = (j == std::string::npos ? j : j + 1);
-	return ret;
-}
-
+/*
 std::string request(std::string file)
 {
+	int i;
 	std::string buf;
 	std::ostringstream buff;
-   std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ";
-	std::ifstream myfile(file);
+   std::string hello = "HTTP/1.1 200 OK\nContent-Type: video/mp4\nContent-Length: ";
+	std::ifstream myfile(file.c_str(), std::ifstream::in);
 	while (getline(myfile, buf))
 		buff << buf;
 	buf = buff.str();
 //	if (myfile.is_open())
-//		std::cout << buf << "dsjfhsihdsifbghi" <<std::endl;
-	hello = hello + std::to_string(buf.length()) + "\n\n";
+i = buf.length();
+std::stringstream ss;
+ss << i;
+std::string intstring = ss.str();
+	hello = hello + intstring + "\n\n";
     hello = hello + buf;
 	return (hello);
-}
+}*/
 
 std::vector<std::string> samerelapute(std::string buffer)
 {
 	std::vector<std::string> ok;
-	size_t i = 0;
-	int a = 0;
-	while (buffer[i])
+	char	*str = new char [buffer.length() + 1];
+	strcpy (str, buffer.c_str());
+	size_t a = 0;
+	size_t i = 0;/*
+	for (int o = 0; o < buffer.length(); i++)
 	{
-		if (buffer[i] == '\n')
+		if (str[i] == '\n')
 		{
 			buffer[i] = '\0';
-			ok.push_back(nextLine(buffer, i));
-			a = 0;
+			ok.push_back(buffer.substr(a));
+			a = o + 1;
 		}
-		a++;
+		o++;
+	}*/
+	while (str[i])
+	{
+		if (str[i] == '\n')
+		{
+			str[i] = '\0';
+			ok.push_back(str + a);
+			a = i + 1;
+		}
 		i++;
 	}
 	return (ok);
+}
+
+void do_get(std::vector<std::string >request, std::string &serv_response)
+{
+	GetResponse ok(request);
+	ErrorIndex t;
+	int code = 0;
+	code = ok.openFile();
+	if (code)
+	{
+		serv_response = t.getPage(code);
+	}
+	else
+		serv_response = ok.setAll();
+}
+
+void find_request(std::vector<std::string >vec, std::string &response)
+{
+	int i = 0;
+	if (vec[0].find("GET") == 0)
+	{
+		do_get(vec, response);
+	}
+	//std::cout << i << std::endl;
 }
 
 int main(int argc, char const *argv[])
@@ -88,8 +92,6 @@ int main(int argc, char const *argv[])
     address.sin_port = htons( PORT );
 
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
-    std::ofstream output1("dsa", std::ifstream::in);
-	
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
         perror("In bind");
@@ -115,31 +117,26 @@ int main(int argc, char const *argv[])
         char buffer[30000] = {0};
         valread = read(new_socket , &buffer, 700);
 		buffstr = buffer;
-	std::vector<std::string> ok=samerelapute(buffstr);
-	std::vector<std::string>::iterator it = ok.begin();
-	while (it != ok.end())
-		std::cout<<"la = |" << *it++ << "|\n";
-		
-		hello.erase();
-	//	parsing parse(buffstr);
-		std::cout << buffstr << std::endl;
-		if (buffstr.find("/chat.ogg") != std::string::npos)
+		std::vector<std::string> ok = samerelapute(buffstr);
+		std::vector<std::string>::iterator it = ok.begin();
+		std::cout.flush();
+		/*while (it != ok.end())
 		{
-			//std::cout << "heyDFJHGBFDKDFGKBHDFK\n";
-			hello = request("chat.ogg");
-
-			//std::cout << hello << std::endl;
-			write(new_socket, hello.c_str(), strlen(hello.c_str()));
-			//printf("------------------Hello message sent-------------------\n");
-		}
+			std::cout<<"La = |" << *it << "|" << std::endl;
+			*it++;
+		}*/
+		std::cout << "true one = \n" << buffstr << std::endl;
+		hello.erase();
+		find_request(ok, hello);
+		std::cout <<" reponse = " <<  hello << std::endl;
+		//std::cout << buffstr << std::endl;
+	/*	if (buffstr.find("/video.mp4") != std::string::npos)
+			hello = request("video.mp4");
 		else if (buffstr.find("/index.html") != std::string::npos)
-		{	
-			hello = request("index.html");
-			//std::cout << hello << std::endl;
-			write(new_socket, hello.c_str(), strlen(hello.c_str()));
-			//printf("------------------Hello message sent-------------------\n");
-		}                                                                                                               
-    close(new_socket);
+			hello = request("index.html");*/
+		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
+    	close(new_socket);
+		hello.erase();
     }
-    return 0;
+    return 0;	
 }

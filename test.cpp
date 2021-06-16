@@ -1,20 +1,24 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <iostream>
-#include <sstream> 
-#include <fstream> 
+#include "Webserv.h"
+#include "ErrorIndex.hpp"
+
+int parse_conf(std::string conf)
+{
+
+}
 
 int main()
 {
-	std::string ok;
-	char ok1[] = "salut";
-	ok = ok1;
-	std::cout << ok << std::endl;
+	std::ostringstream buf;
+	std::string file;
+	std::ifstream myfile("test.conf", std::ifstream::in);
+	if (!(myfile.is_open()))
+		return 404;
+	while (getline(myfile, file))
+	{
+		buf << file;
+		buf << "\n";
+	}
+	file = buf.str();
+	ServerConf t(file);
+	//std::cout << file << std::endl;
 }
