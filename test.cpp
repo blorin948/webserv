@@ -1,5 +1,4 @@
-#include "Webserv.h"
-#include "ErrorIndex.hpp"
+#include "ServerConf.hpp"
 
 int parse_conf(std::string conf)
 {
@@ -19,6 +18,13 @@ int main()
 		buf << "\n";
 	}
 	file = buf.str();
-	ServerConf t(file);
+	try
+	{
+		ServerConf t(file);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 	//std::cout << file << std::endl;
 }

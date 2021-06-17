@@ -11,12 +11,12 @@
 #include <iostream>
 #include <sstream> 
 #include <fstream>
-#include "parsing/parsing.hpp"
+//#include "parsing/parsing.hpp"
 #include <utility> 
 #include <stdio.h>
 #include <stdlib.h>
-#include "GetResponse.hpp"
 #include <dirent.h>
-#include "ErrorIndex.hpp"
-#include "ServerConf.hpp"
+#include "vector"
+
+int intlen(int i);
 #endif
