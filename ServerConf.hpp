@@ -32,6 +32,8 @@ class ServerConf
 
 	private :
 
+	void orderRoute();
+	void tri_bulle();
 	void parseAll();
 	void splitConfRoute(std::string location);
 	void parseRoot(std::string root);
@@ -39,7 +41,6 @@ class ServerConf
 	void parsePort(std::string listen);
 	void parseSize(std::string size);
 	void parseError(std::string error);
-	int isWord(int i, int incr);
 	int cut_conf(std::string conf, int &a, int &length);
 	int routeLength(int i);
 

@@ -1,6 +1,7 @@
 #include "Webserv.h"
 #define PORT 8000
-
+#include "ErrorIndex.hpp"
+#include "GetResponse.hpp"
 /*
 std::string request(std::string file)
 {
@@ -75,6 +76,14 @@ void find_request(std::vector<std::string >vec, std::string &response)
 	}
 	//std::cout << i << std::endl;
 }
+
+std::string create_post(void)
+{
+	std::string post;
+	post.append("POST /index_example.html HTTP/1.1\nContent-type: text/html\nContent-length: 16\n\n<p>New File</p>");
+	return (post);
+}
+
 
 int main(int argc, char const *argv[])
 {

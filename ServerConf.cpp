@@ -21,7 +21,7 @@ void ServerConf::splitConfRoute(std::string location)
 	std::string route;
 	while ((i = _conf.find(location, i)) && i != std::string::npos)
 	{
-		if (isWord(i, location.length()))
+		if (isWord(i, location.length(), _conf))
 		{
 			i = i + location.length();
 			length = routeLength(i);
@@ -83,19 +83,51 @@ void ServerConf::copyRoute(RouteConf *x, int i)
 	x->setLimit(getLimit());
 }
 
+
+void ServerConf::tri_bulle()
+{
+    int passage = 0;
+    bool permutation = true;
+    int en_cours;
+    while ( permutation) 
+	{
+        permutation = false;
+        passage ++;
+        for (en_cours = 0 ; en_cours <_route.size()  - passage ; en_cours++) 
+		{
+            if (_route[en_cours]->getSizePath() < _route[en_cours+1]->getSizePath())
+			{
+                permutation = true;
+                // on echange les deux elements
+                RouteConf *temp = _route[en_cours];
+                _route[en_cours] = _route[en_cours+1];
+                _route[en_cours+1] = temp;
+            }
+        }
+    }
+}
+
 void ServerConf::parseRoute(void)
 {
 	int nbRoute = _confRouteOnly.size();
 	int i = 0;
-	while (i < nbRoute)
+	try
 	{
-		RouteConf *x = new RouteConf;
-		copyRoute(x, i);
-		_route.push_back(x);
-		_route[i]->printAll();
-		i++;
+		while (i < nbRoute)
+		{
+			RouteConf *x = new RouteConf;
+			copyRoute(x, i);
+			_route.push_back(x);
+			_route[i]->parseLocation();
+			//_route[i]->printAll();
+			i++;
+		}
+	tri_bulle();
 	}
-
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
 }
 
 ServerConf::ServerConf(void)
@@ -171,7 +203,7 @@ void ServerConf::parseError(std::string error)
 	std::string second;
 	while ((i = _conf.find(error, i)) && i != std::string::npos)
 	{
-		if (isWord(i, error.length()))
+		if (isWord(i, error.length(), _conf))
 		{
 			first = (atoi((_conf.c_str() + i + error.length())));
 			i = i + error.length();
@@ -205,7 +237,7 @@ void ServerConf::parseName(std::string name)
 	int i = 0;
 	if ((i = _conf.find(name, i)) && i != std::string::npos)
 	{
-		if (isWord(i, name.length()))
+		if (isWord(i, name.length(), _conf))
 		{
 			i = i + name.length();
 			while (isspace(_conf[i]))
@@ -228,7 +260,7 @@ void ServerConf::parseRoot(std::string root)
 	int i = 0;
 	if ((i = _conf.find(root, i)) && i != std::string::npos)
 	{
-		if (isWord(i, root.length()))
+		if (isWord(i, root.length(), _conf))
 		{
 			i = i + root.length();
 			while (isspace(_conf[i]))
@@ -249,7 +281,7 @@ void ServerConf::parseSize(std::string size)
 	int i = 0;
 	if ((i = _conf.find(size, i)) && i != std::string::npos)
 	{
-		if (isWord(i, size.length()))
+		if (isWord(i, size.length(), _conf))
 			_sizeLimit = atoi((_conf.c_str() + i + size.length()));
 		i = i + size.length();
 	}
@@ -263,7 +295,7 @@ void ServerConf::parsePort(std::string listen)
 	int i = 0;
 	while ((i = _conf.find(listen, i)) && i != std::string::npos)
 	{
-		if (isWord(i, listen.length()))
+		if (isWord(i, listen.length(), _conf))
 			_port.push_back(atoi((_conf.c_str() + i + listen.length())));
 		i = i + listen.length();
 	}
@@ -301,11 +333,4 @@ int ServerConf::cut_conf(std::string conf, int &start, int &length)
 	if (col > 0)
 		return (0);
 	return (i);
-}
-
-int ServerConf::isWord(int i, int incr)
-{
-	if ((i == 0 || isspace(_conf[i - 1])) && _conf[i + incr] == ' ')
-		return (1);
-	return (0);
 }
