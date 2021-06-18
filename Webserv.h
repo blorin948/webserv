@@ -23,7 +23,7 @@ typedef struct s_response
 	int code;
 	std::string path;
 	bool autoindex;
-	std::vector<std::string> errPages;
+	std::vector <std::pair<int, std::string> > errPages;
 	unsigned int maxBodySize;
 	std::string body;
 	std::string method;
@@ -41,6 +41,7 @@ typedef struct s_request
 	int port;
 	std::string type;
 	int size;
+	int code;
 }				t_request;
 
 int isWord(int i, int incr, std::string str);

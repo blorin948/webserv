@@ -10,6 +10,80 @@ RouteConf::RouteConf(RouteConf const &c)
 	*this = c;
 }
 
+t_response RouteConf::getReponse(t_request req)
+{
+	t_response t;
+	if (req.code > 0)
+	{
+		t.code = req.code;
+		t.method = "GET";
+		t.errPages = _errPages;
+		std::cout << "error 400" << std::endl;
+		return (t);
+	}
+	setResMethod(t, req);
+	setResPath(t, req);
+	setResRedirect(t, req);
+	t.autoindex = _index;
+	t.errPages = _errPages;
+	t.maxBodySize = _sizeLimit;
+	t.defaultDir = _defaultDir;
+	return (t);
+}
+
+std::string RouteConf::getPath(void)
+{
+	return (_path);
+}
+
+void RouteConf::setResRedirect(t_response &t, t_request req)
+{
+	int i = 0;
+	while (i < _rewrite.size())
+	{
+		if (_rewrite[i].first.compare(_realPath) == 0)
+		{
+			t.code = 301;
+			t.location = _rewrite[i].second;
+		}
+		i++;
+	}
+	if (t.code == 301)
+	{
+		std::cout << t.location<< std::endl;
+	}
+}
+
+void RouteConf::setResPath(t_response &t, t_request req)
+{
+	int i = 0;
+	std::string realPath;
+	while (i < _path.find_last_of("/"))
+	{
+		realPath.append(1, _path[i]);
+		i++;
+	}
+	realPath = req.path.substr(_path.length());
+	_realPath = realPath;
+	realPath = _root + realPath;
+	std::cout << realPath << std::endl;
+}
+
+void RouteConf::setResMethod(t_response &t, t_request req)
+{
+	int i = 0;
+	std::cout << _method.size() << std::endl;
+	while (i < _method.size())
+	{
+		if (_method[i].compare(req.method) == 0)
+			t.method = req.method;
+		i++;
+	}
+	if (t.method.empty())
+		t.code = 405;
+	std::cout << "method = "<< t.method << std::endl;
+}
+
 RouteConf &RouteConf::operator=(RouteConf const &c)
 {
 	_sizeLimit = c._sizeLimit;
@@ -72,12 +146,12 @@ void RouteConf::parseRedirect(std::string redirect)
 		}
 	i++;
 	}
-	std::vector<std::pair<std::string ,std::string> >::iterator it = _rewrite.begin();
+	/*std::vector<std::pair<std::string ,std::string> >::iterator it = _rewrite.begin();
 	while (it != _rewrite.end())
 	{
 		std::cout << it->first << "  " << it->second << std::endl;
 		it++;
-	}
+	}*/
 }
 
 void RouteConf::parseAutoindex(std::string autoindex)
@@ -122,7 +196,7 @@ void RouteConf::parseIndex(std::string index)
 		}
 		i++;
 	}
-	std::cout << _defaultDir << std::endl;
+//	std::cout << _defaultDir << std::endl;
 }
 
 void RouteConf::parseRoot(std::string root)
@@ -144,7 +218,7 @@ void RouteConf::parseRoot(std::string root)
 		}
 		i++;
 	}
-	std::cout << _root << std::endl;
+//	std::cout << _root << std::endl;
 }
 
 void RouteConf::parseMethod(std::string method)
@@ -171,9 +245,15 @@ void RouteConf::parseMethod(std::string method)
 			}
 		i++;
 	}
-	std::vector<std::string>::iterator it = _method.begin();
+	if (_method.empty())
+	{
+		_method.push_back("GET");
+		_method.push_back("POST");
+		_method.push_back("DELETE");
+	}
+	/*std::vector<std::string>::iterator it = _method.begin();
 	while (it != _method.end())
-		std::cout << "|" <<*it++ <<"|"<< std::endl;
+		std::cout << "|" <<*it++ <<"|"<< std::endl;*/
 }
 
 void RouteConf::parsePath()
@@ -193,8 +273,8 @@ void RouteConf::parsePath()
 		i++;
 		_sizePath++;
 	}
-	std::cout << _path << std::endl;
-	std::cout << _sizePath << std::endl;
+/*	std::cout << _path << std::endl;
+	std::cout << _sizePath << std::endl;*/
 }
 
 void RouteConf::printAll(void)

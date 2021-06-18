@@ -1,7 +1,9 @@
 #include "Webserv.h"
-#define PORT 8000
+#define PORT 8001
 #include "ErrorIndex.hpp"
 #include "GetResponse.hpp"
+#include "ParseRequest.hpp"
+#include "ServerConf.hpp"
 /*
 std::string request(std::string file)
 {
@@ -84,12 +86,37 @@ std::string create_post(void)
 	return (post);
 }
 
+ServerConf openT()
+{
+	std::ostringstream buf;
+	std::string file;
+	std::ifstream myfile("test.conf", std::ifstream::in);
+	/*if (!(myfile.is_open()))
+		return NULL;*/
+	while (getline(myfile, file))
+	{
+		buf << file;
+		buf << "\n";
+	}
+	file = buf.str();
+	try
+	{
+		ServerConf t(file);
+		return (t);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+}
 
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
+	ServerConf serv = openT();
+
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -128,6 +155,12 @@ int main(int argc, char const *argv[])
 		buffstr = buffer;
 		std::vector<std::string> ok = samerelapute(buffstr);
 		std::vector<std::string>::iterator it = ok.begin();
+		ParseRequest t(ok);
+		t_request req;
+		t.getRequest(req);
+		t_response res;
+		res = serv.getReponse(req);
+		std:: cout << "LALALALALALLALALAL "+ req.host << std::endl;
 		std::cout.flush();
 		/*while (it != ok.end())
 		{

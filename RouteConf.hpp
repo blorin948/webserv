@@ -27,15 +27,20 @@ class RouteConf
 	void printAll();
 	void parseLocation();
 	int getSizePath() const;
+	std::string getPath(void);
+	t_response getReponse(t_request t);
 
 	private :
 	
+	void setResPath(t_response &t, t_request req);
 	void parseRoot(std::string root);
 	void parseMethod(std::string method);
 	void parsePath(void);
 	void parseAutoindex(std::string autoindex);
 	void parseIndex(std::string index);
 	void parseRedirect(std::string redirect);
+	void setResMethod(t_response &t, t_request req);
+	void setResRedirect(t_response &t, t_request req);
 	int _sizePath;
 	std::string _path;
 	unsigned int _sizeLimit;
@@ -48,6 +53,7 @@ class RouteConf
 	std::string _root;
 	std::vector <int> _port;
 	std::vector <std::pair<int, std::string> > _errPages;
+	std::string _realPath;
 };
 
 std::ostream& operator<<(std::ostream& out, RouteConf const &c);
