@@ -10,9 +10,10 @@ RouteConf::RouteConf(RouteConf const &c)
 	*this = c;
 }
 
-t_response RouteConf::getReponse(t_request req)
+t_response RouteConf::getReponse(t_response res, t_request req)
 {
-	t_response t;
+	t_response t = res;
+	t.oldpath = req.path;
 	if (req.code > 0)
 	{
 		t.code = req.code;
@@ -21,9 +22,13 @@ t_response RouteConf::getReponse(t_request req)
 		std::cout << "error 400" << std::endl;
 		return (t);
 	}
+	if (_rewrite.empty() == 0)
+	{
+		t.code = 301;
+		t.location = _rewrite;
+	}
 	setResMethod(t, req);
 	setResPath(t, req);
-	setResRedirect(t, req);
 	t.autoindex = _index;
 	t.errPages = _errPages;
 	t.maxBodySize = _sizeLimit;
@@ -36,37 +41,11 @@ std::string RouteConf::getPath(void)
 	return (_path);
 }
 
-void RouteConf::setResRedirect(t_response &t, t_request req)
-{
-	int i = 0;
-	while (i < _rewrite.size())
-	{
-		if (_rewrite[i].first.compare(_realPath) == 0)
-		{
-			t.code = 301;
-			t.location = _rewrite[i].second;
-		}
-		i++;
-	}
-	if (t.code == 301)
-	{
-		std::cout << t.location<< std::endl;
-	}
-}
-
 void RouteConf::setResPath(t_response &t, t_request req)
 {
 	int i = 0;
-	std::string realPath;
-	while (i < _path.find_last_of("/"))
-	{
-		realPath.append(1, _path[i]);
-		i++;
-	}
-	realPath = req.path.substr(_path.length());
-	_realPath = realPath;
-	realPath = _root + realPath;
-	std::cout << realPath << std::endl;
+	req.path.erase(0, 1);
+	t.path = _root + req.path;
 }
 
 void RouteConf::setResMethod(t_response &t, t_request req)
@@ -80,8 +59,10 @@ void RouteConf::setResMethod(t_response &t, t_request req)
 		i++;
 	}
 	if (t.method.empty())
+	{
+		t.method = "GET";
 		t.code = 405;
-	std::cout << "method = "<< t.method << std::endl;
+	}
 }
 
 RouteConf &RouteConf::operator=(RouteConf const &c)
@@ -113,15 +94,13 @@ void RouteConf::parseLocation(void)
 	parseRoot("root");
 	parseAutoindex("autoindex");
 	parseIndex("default_dir");
-	parseRedirect("rewrite");
+	parseRedirect("return");
 }
 
 void RouteConf::parseRedirect(std::string redirect)
 {
 	int i = 0;
-	std::string first;
-	std::string second;
-	while ((i = _conf.find(redirect, i)) && i != std::string::npos)
+	if ((i = _conf.find(redirect, i)) && i != std::string::npos)
 	{
 		if (isWord(i, redirect.length(), _conf))
 		{
@@ -130,28 +109,12 @@ void RouteConf::parseRedirect(std::string redirect)
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
-				first.append(1, _conf[i]);
+				_rewrite.append(1, _conf[i]);
 				i++;
 			}
-			while (isspace(_conf[i]))
-				i++;
-			while (isspace(_conf[i]) == 0)
-			{
-				second.append(1, _conf[i]);
-				i++;
-			}
-			_rewrite.push_back(std::make_pair(first, second));
-			second.clear();
-			first.clear();
 		}
 	i++;
 	}
-	/*std::vector<std::pair<std::string ,std::string> >::iterator it = _rewrite.begin();
-	while (it != _rewrite.end())
-	{
-		std::cout << it->first << "  " << it->second << std::endl;
-		it++;
-	}*/
 }
 
 void RouteConf::parseAutoindex(std::string autoindex)

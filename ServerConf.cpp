@@ -12,15 +12,14 @@ ServerConf::ServerConf(std::string &conf) : _errorParsing(false), _sizeLimit(0)
 	parseAll();
 }
 
-t_response ServerConf::getReponse(t_request req)
+t_response ServerConf::getReponse(t_response res, t_request req)
 {
-	t_response t;
 	int i = 0;
 	while (i < _route.size())
 	{
 		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
 		{
-			t = _route[i]->getReponse(req);
+			res = _route[i]->getReponse(res, req);
 			std::cout << _route[i]->getPath() << std::endl;
 			break ;
 		}
@@ -28,7 +27,7 @@ t_response ServerConf::getReponse(t_request req)
 	}
 	if (i == _route.size())
 		std::cout << "direct Serv " << std::endl;
-	return (t);
+	return (res);
 }
 
 void ServerConf::splitConfRoute(std::string location)
@@ -318,7 +317,7 @@ void ServerConf::parsePort(std::string listen)
 			_port.push_back(atoi((_conf.c_str() + i + listen.length())));
 		i = i + listen.length();
 	}
-	std::vector<int>::iterator it = _port.begin();
+//	std::vector<int>::iterator it = _port.begin();
 	/*while (it != _port.end())
 		std::cout << *it++ << std::endl;*/
 	if (_port.empty())

@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include "vector"
+#include <sys/stat.h>
 
 typedef struct s_response
 {
@@ -30,6 +31,7 @@ typedef struct s_response
 	std::string defaultDir;
 	std::string name;
 	std::string location;
+	std::string oldpath;
 }				t_response;
 
 typedef struct s_request
@@ -44,6 +46,8 @@ typedef struct s_request
 	int code;
 }				t_request;
 
+void printResponse(t_response t);
 int isWord(int i, int incr, std::string str);
 int intlen(int i);
+std::string intToString(int i);
 #endif

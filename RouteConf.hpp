@@ -28,7 +28,7 @@ class RouteConf
 	void parseLocation();
 	int getSizePath() const;
 	std::string getPath(void);
-	t_response getReponse(t_request t);
+	t_response getReponse(t_response res, t_request t);
 
 	private :
 	
@@ -46,7 +46,7 @@ class RouteConf
 	unsigned int _sizeLimit;
 	bool _index;
 	std::vector<std::string> _method;
-	std::vector<std::pair<std::string, std::string> > _rewrite;
+	std::string _rewrite;
 	std::string _defaultDir;
 	std::string _conf;
 	std::string _servName;

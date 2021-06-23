@@ -1,29 +1,22 @@
 #include "Webserv.h"
-#define PORT 8001
+#define PORT 8004
 #include "ErrorIndex.hpp"
 #include "GetResponse.hpp"
 #include "ParseRequest.hpp"
 #include "ServerConf.hpp"
-/*
-std::string request(std::string file)
+
+void initResponse(t_response &t)
 {
-	int i;
-	std::string buf;
-	std::ostringstream buff;
-   std::string hello = "HTTP/1.1 200 OK\nContent-Type: video/mp4\nContent-Length: ";
-	std::ifstream myfile(file.c_str(), std::ifstream::in);
-	while (getline(myfile, buf))
-		buff << buf;
-	buf = buff.str();
-//	if (myfile.is_open())
-i = buf.length();
-std::stringstream ss;
-ss << i;
-std::string intstring = ss.str();
-	hello = hello + intstring + "\n\n";
-    hello = hello + buf;
-	return (hello);
-}*/
+	t.code = 0;
+	t.autoindex = false;
+}
+
+void initRequest(t_request &t)
+{
+	t.size = 0;
+	t.port = 0;
+	t.code = 0;
+}
 
 std::vector<std::string> samerelapute(std::string buffer)
 {
@@ -31,17 +24,7 @@ std::vector<std::string> samerelapute(std::string buffer)
 	char	*str = new char [buffer.length() + 1];
 	strcpy (str, buffer.c_str());
 	size_t a = 0;
-	size_t i = 0;/*
-	for (int o = 0; o < buffer.length(); i++)
-	{
-		if (str[i] == '\n')
-		{
-			buffer[i] = '\0';
-			ok.push_back(buffer.substr(a));
-			a = o + 1;
-		}
-		o++;
-	}*/
+	size_t i = 0;
 	while (str[i])
 	{
 		if (str[i] == '\n')
@@ -55,26 +38,19 @@ std::vector<std::string> samerelapute(std::string buffer)
 	return (ok);
 }
 
-void do_get(std::vector<std::string >request, std::string &serv_response)
+void do_get(t_response t, std::string &serv_response)
 {
-	GetResponse ok(request);
-	ErrorIndex t;
-	int code = 0;
-	code = ok.openFile();
-	if (code)
-	{
-		serv_response = t.getPage(code);
-	}
-	else
-		serv_response = ok.setAll();
+	GetResponse ok;
+	serv_response = ok.getFullResponse(t);
 }
 
-void find_request(std::vector<std::string >vec, std::string &response)
+void find_request(t_response t, std::string &response)
 {
 	int i = 0;
-	if (vec[0].find("GET") == 0)
+	std::cout << t.method << std::endl;
+	if (t.method.compare("GET") == 0)
 	{
-		do_get(vec, response);
+		do_get(t, response);
 	}
 	//std::cout << i << std::endl;
 }
@@ -107,6 +83,22 @@ ServerConf openT()
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
+	}
+}
+
+void chopBody(t_request t)
+{
+	if (t.path.compare("/upload") == 0)
+	{
+	std::ostringstream buf;
+	std::string file;
+	std::ifstream myfile("file1", std::ifstream::in);
+		while (getline(myfile, file))
+		{
+			buf << file;
+			buf << "\n";
+		}
+	std::cout <<"le beuf = " << buf.str() << std::endl;
 	}
 }
 
@@ -150,32 +142,27 @@ int main(int argc, char const *argv[])
             perror("In accept");
             exit(EXIT_FAILURE);
         }
-        char buffer[30000] = {0};
-        valread = read(new_socket , &buffer, 700);
+        char buffer[300000] = {0};
+        valread = read(new_socket , &buffer, 300000);
 		buffstr = buffer;
+		std::cout << "true one = \n" << buffer << std::endl;
 		std::vector<std::string> ok = samerelapute(buffstr);
 		std::vector<std::string>::iterator it = ok.begin();
 		ParseRequest t(ok);
 		t_request req;
+		initRequest(req);
 		t.getRequest(req);
+		chopBody(req);
+		std::cout << "req code = " << req.code << std::endl;
 		t_response res;
-		res = serv.getReponse(req);
+		initResponse(res);
+		res = serv.getReponse(res, req);
+		printResponse(res);
 		std:: cout << "LALALALALALLALALAL "+ req.host << std::endl;
 		std::cout.flush();
-		/*while (it != ok.end())
-		{
-			std::cout<<"La = |" << *it << "|" << std::endl;
-			*it++;
-		}*/
-		std::cout << "true one = \n" << buffstr << std::endl;
 		hello.erase();
-		find_request(ok, hello);
+		find_request(res, hello);
 		std::cout <<" reponse = " <<  hello << std::endl;
-		//std::cout << buffstr << std::endl;
-	/*	if (buffstr.find("/video.mp4") != std::string::npos)
-			hello = request("video.mp4");
-		else if (buffstr.find("/index.html") != std::string::npos)
-			hello = request("index.html");*/
 		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
     	close(new_socket);
 		hello.erase();

@@ -29,7 +29,7 @@ class ServerConf
 	std::vector <int> getPort() const;
 	std::vector <std::pair<int, std::string> > getErrPages() const;
 	void copyRoute(RouteConf *x, int i);
-	t_response getReponse(t_request req);
+	t_response getReponse(t_response res, t_request req);
 
 	private :
 
