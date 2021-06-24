@@ -1,5 +1,5 @@
 #include "Webserv.h"
-#define PORT 8004
+#define PORT 8005
 #include "ErrorIndex.hpp"
 #include "GetResponse.hpp"
 #include "ParseRequest.hpp"
@@ -16,6 +16,7 @@ void initRequest(t_request &t)
 	t.size = 0;
 	t.port = 0;
 	t.code = 0;
+	t.isUpload = false;
 }
 
 std::vector<std::string> samerelapute(std::string buffer)
@@ -31,6 +32,7 @@ std::vector<std::string> samerelapute(std::string buffer)
 		{
 			str[i] = '\0';
 			ok.push_back(str + a);
+			std::cout << "err = " << str + a << std::endl; 
 			a = i + 1;
 		}
 		i++;
@@ -108,7 +110,6 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 	ServerConf serv = openT();
-
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -118,7 +119,7 @@ int main(int argc, char const *argv[])
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons( PORT );
-
+	
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
@@ -145,20 +146,22 @@ int main(int argc, char const *argv[])
         char buffer[300000] = {0};
         valread = read(new_socket , &buffer, 300000);
 		buffstr = buffer;
-		std::cout << "true one = \n" << buffer << std::endl;
+		//std::cout << "true one = \n" << buffer << std::endl;
 		std::vector<std::string> ok = samerelapute(buffstr);
 		std::vector<std::string>::iterator it = ok.begin();
+		while (it != ok.end())
+		{
+			std::cout << *it++ << std::endl;
+		}
 		ParseRequest t(ok);
 		t_request req;
 		initRequest(req);
 		t.getRequest(req);
-		chopBody(req);
-		std::cout << "req code = " << req.code << std::endl;
+		t.printAll(req);
 		t_response res;
 		initResponse(res);
 		res = serv.getReponse(res, req);
 		printResponse(res);
-		std:: cout << "LALALALALALLALALAL "+ req.host << std::endl;
 		std::cout.flush();
 		hello.erase();
 		find_request(res, hello);

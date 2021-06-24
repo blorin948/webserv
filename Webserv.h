@@ -39,10 +39,12 @@ typedef struct s_request
 	std::string method;
 	std::string path;
 	std::string http;
+	std::vector<std::string> body;
 	std::string host;
 	int port;
 	std::string type;
 	int size;
+	bool isUpload;
 	int code;
 }				t_request;
 

@@ -18,12 +18,16 @@ class ParseRequest
 	void parseMethod(void);
 	void parsePath(void);
 	void parseHttp(void);
+	void parseBody(void);
 	void parseHost(std::string host);
 	void getRequest(t_request &t);
+	void printAll(t_request t);
+	void parseType(std::string type);
 
 	private :
 	std::vector <std::string> _request;
 	std::string _method;
+	std::vector <std::string> _body;
 	std::string _path;
 	std::string _http;
 	std::string _host;
@@ -32,6 +36,7 @@ class ParseRequest
 	int _size;
 	int _i;
 	int _code;
+	bool _isUpload;
 
 };
 
