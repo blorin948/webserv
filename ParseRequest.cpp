@@ -8,11 +8,23 @@ ParseRequest::ParseRequest(std::vector<std::string> request) : _request(request)
 	parseType("Content-Type:");
 	parseHost("Host:");
 	parseBody();
+	_size = getBodyLength();
 }
 
+int ParseRequest::getBodyLength(void)
+{
+	int i = 0 ;
+	int size = 0;
+	while (i < _body.size())
+	{
+		size = size + _body[i].length();
+		i++;
+	}
+	return size;
+}
 ParseRequest::ParseRequest(void)
 {
-
+	
 }
 
 void ParseRequest::printAll(t_request t)
@@ -25,6 +37,7 @@ void ParseRequest::printAll(t_request t)
 	std::cout << "type = " << t.type << std::endl;
 	std::cout << "size = " << t.size << std::endl;
 	std::cout << "code = " << t.code << std::endl;
+	std::cout << "uploadName = " << t.uploadName << std::endl;
 	std::vector<std::string>::iterator it = _body.begin();
 	while (it != _body.end())
 	{
@@ -45,6 +58,8 @@ void ParseRequest::getRequest(t_request &t)
 	t.code = _code;
 	t.isUpload = _isUpload;
 	t.body = _body;
+	t.uploadName = _uploadName;
+	t.size = _size;
 }
 
 void ParseRequest::parseHost(std::string host)
@@ -128,21 +143,25 @@ void ParseRequest::parseBody(void)
 	int i = 0;
 	if (_method.compare("POST") == 0)
 	{
-		while (i < _request.size())
-		{
-			if (_request[i].size() == 1)
-			{
-				break ;
-			}
+		while (i < _request.size() && _request[i].compare(_boundary) != 0)
 			i++;
-		}
 	}
 	else
 		return ;
-	while (i < _request.size())
+	if (i < _request.size())
 	{
-		_body.push_back(_request[i]);
+		// Get file name //
 		i++;
+		_uploadName = _request[i].substr(_request[i].find("filename=") + 9);
+		_uploadName.erase(0, 1);
+		_uploadName.resize(_uploadName.size() - 2);
+		i = i + 3;
+		// Get body of file //
+		while (i < _request.size() && _request[i].compare(_boundary) != 0)
+		{
+			_body.push_back(_request[i]);
+			i++;
+		}
 	}
 }
 
@@ -160,7 +179,6 @@ void ParseRequest::parseType(std::string type)
 	int tmp = i;
 	i = type.length();
 	_type.clear();
-	std::cout << i << std::endl;
 	i++;
 	while (isspace(_request[tmp][i]))
 		i++;
@@ -169,9 +187,16 @@ void ParseRequest::parseType(std::string type)
 		_type.append(1, _request[tmp][i]);
 		i++;
 	}
-	if (type.compare("multipart/form-data") == 0)
-	{
+	if (_type.compare("multipart/form-data") == 0)
 		_isUpload = true;
+	else
+		return ;
+	i = _request[tmp].find("=", i);
+	i++;
+	if (i != std::string::npos)
+	{
+		_boundary = _request[tmp].substr(i);
+		_boundary.insert(0, "--");
 	}
 }
 

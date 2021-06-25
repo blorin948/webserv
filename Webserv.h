@@ -32,6 +32,7 @@ typedef struct s_response
 	std::string name;
 	std::string location;
 	std::string oldpath;
+	std::string uploadPath;
 }				t_response;
 
 typedef struct s_request
@@ -45,6 +46,7 @@ typedef struct s_request
 	std::string type;
 	int size;
 	bool isUpload;
+	std::string uploadName;
 	int code;
 }				t_request;
 

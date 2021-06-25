@@ -25,6 +25,7 @@ class ParseRequest
 	void parseType(std::string type);
 
 	private :
+	int getBodyLength(void);
 	std::vector <std::string> _request;
 	std::string _method;
 	std::vector <std::string> _body;
@@ -37,6 +38,8 @@ class ParseRequest
 	int _i;
 	int _code;
 	bool _isUpload;
+	std::string _boundary;
+	std::string _uploadName;
 
 };
 

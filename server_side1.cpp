@@ -4,6 +4,7 @@
 #include "GetResponse.hpp"
 #include "ParseRequest.hpp"
 #include "ServerConf.hpp"
+#include "PostResponse.hpp"
 
 void initResponse(t_response &t)
 {
@@ -32,7 +33,6 @@ std::vector<std::string> samerelapute(std::string buffer)
 		{
 			str[i] = '\0';
 			ok.push_back(str + a);
-			std::cout << "err = " << str + a << std::endl; 
 			a = i + 1;
 		}
 		i++;
@@ -46,13 +46,25 @@ void do_get(t_response t, std::string &serv_response)
 	serv_response = ok.getFullResponse(t);
 }
 
-void find_request(t_response t, std::string &response)
+void do_post(t_response &res, t_request req,  std::string &serv_response, ServerConf *serv)
+{
+	PostResponse ok;
+	std::cout << "req size = " << req.size << " seerv limit = " << serv->getLimit() <<std::endl;
+	if (req.size > serv->getLimit())
+		res.code = 413;
+	serv_response = ok.makePost(req, res);
+}
+
+void find_request(t_response t, t_request req, std::string &response, ServerConf *serv)
 {
 	int i = 0;
-	std::cout << t.method << std::endl;
 	if (t.method.compare("GET") == 0)
 	{
 		do_get(t, response);
+	}
+	if (t.method.compare("POST") == 0)
+	{
+		do_post(t, req, response, serv);
 	}
 	//std::cout << i << std::endl;
 }
@@ -88,21 +100,6 @@ ServerConf openT()
 	}
 }
 
-void chopBody(t_request t)
-{
-	if (t.path.compare("/upload") == 0)
-	{
-	std::ostringstream buf;
-	std::string file;
-	std::ifstream myfile("file1", std::ifstream::in);
-		while (getline(myfile, file))
-		{
-			buf << file;
-			buf << "\n";
-		}
-	std::cout <<"le beuf = " << buf.str() << std::endl;
-	}
-}
 
 int main(int argc, char const *argv[])
 {
@@ -149,23 +146,25 @@ int main(int argc, char const *argv[])
 		//std::cout << "true one = \n" << buffer << std::endl;
 		std::vector<std::string> ok = samerelapute(buffstr);
 		std::vector<std::string>::iterator it = ok.begin();
-		while (it != ok.end())
+		/*while (it != ok.end())
 		{
 			std::cout << *it++ << std::endl;
-		}
+		}*/
 		ParseRequest t(ok);
 		t_request req;
 		initRequest(req);
 		t.getRequest(req);
-		t.printAll(req);
+		//t.printAll(req);
 		t_response res;
+
 		initResponse(res);
 		res = serv.getReponse(res, req);
-		printResponse(res);
-		std::cout.flush();
+		//printResponse(res);
+		//std::cout.flush();
 		hello.erase();
-		find_request(res, hello);
-		std::cout <<" reponse = " <<  hello << std::endl;
+		std::cout << "SERVEER SIZE = " << serv.getLimit() << std::endl;
+		find_request(res, req,  hello, &serv);
+		//std::cout <<" reponse = " <<  hello << std::endl;
 		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
     	close(new_socket);
 		hello.erase();

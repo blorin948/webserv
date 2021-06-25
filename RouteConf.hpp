@@ -38,6 +38,7 @@ class RouteConf
 	void parsePath(void);
 	void parseAutoindex(std::string autoindex);
 	void parseIndex(std::string index);
+	void parseUpload(std::string upload);
 	void parseRedirect(std::string redirect);
 	void setResMethod(t_response &t, t_request req);
 	void setResRedirect(t_response &t, t_request req);
@@ -54,6 +55,7 @@ class RouteConf
 	std::vector <int> _port;
 	std::vector <std::pair<int, std::string> > _errPages;
 	std::string _realPath;
+	std::string _uploadPath;
 };
 
 std::ostream& operator<<(std::ostream& out, RouteConf const &c);

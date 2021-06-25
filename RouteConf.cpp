@@ -33,6 +33,7 @@ t_response RouteConf::getReponse(t_response res, t_request req)
 	t.errPages = _errPages;
 	t.maxBodySize = _sizeLimit;
 	t.defaultDir = _defaultDir;
+	t.uploadPath = _uploadPath;
 	return (t);
 }
 
@@ -87,6 +88,34 @@ RouteConf::~RouteConf()
 
 }
 
+void RouteConf::parseUpload(std::string upload)
+{
+	int i = 0;
+	if ((i = _conf.find(upload, i)) && i != std::string::npos)
+	{
+		if (isWord(i, upload.length(), _conf))
+		{
+			i = i + upload.length();	
+			while (isspace(_conf[i]))
+				i++;
+			while (isspace(_conf[i]) == 0)
+			{
+				_uploadPath.append(1, _conf[i]);
+				i++;
+			}
+		}
+		i++;
+	}
+	if (_uploadPath.size() > 0)
+	{
+		DIR *dir = opendir(_uploadPath.c_str());
+		if (dir && _uploadPath[_uploadPath.size() - 1] == '/')
+			std::cout << "CA EXISTE" << std::endl;
+		else
+			throw std::runtime_error("Error with upload_path");
+	}
+}
+
 void RouteConf::parseLocation(void)
 {
 	parsePath();
@@ -95,6 +124,7 @@ void RouteConf::parseLocation(void)
 	parseAutoindex("autoindex");
 	parseIndex("default_dir");
 	parseRedirect("return");
+	parseUpload("upload_path");
 }
 
 void RouteConf::parseRedirect(std::string redirect)

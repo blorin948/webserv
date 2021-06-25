@@ -19,7 +19,6 @@ bool GetResponse::isDirectory(std::string path)
 	int i  = path.find_last_of("/");
 	if (i == path.size() -1)
 	{
-		std::cout << "dir" << std::endl;
 		return (true);
 	}
 	else
@@ -155,7 +154,6 @@ std::string GetResponse::getErrorPage(t_response res)
 
 int GetResponse::openFile(std::string name)
 {
-	std::cout << "path  = |" << name << "|" <<std::endl;
 	std::ostringstream buf;
 	std::ifstream myfile(name, std::ifstream::in);
 	if (!(myfile.is_open()))

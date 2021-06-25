@@ -20,7 +20,6 @@ t_response ServerConf::getReponse(t_response res, t_request req)
 		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
 		{
 			res = _route[i]->getReponse(res, req);
-			std::cout << _route[i]->getPath() << std::endl;
 			break ;
 		}
 		i++;
@@ -305,7 +304,7 @@ void ServerConf::parseSize(std::string size)
 	}
 	if (_sizeLimit == 0)
 		_sizeLimit = 500000000;
-	//std::cout << _sizeLimit << std::endl;
+	std::cout << _sizeLimit << std::endl;
 }
 
 void ServerConf::parsePort(std::string listen)

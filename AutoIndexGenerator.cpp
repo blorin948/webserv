@@ -7,7 +7,6 @@ AutoIndexGenerator::AutoIndexGenerator(void)
 
 std::string AutoIndexGenerator::generateIndex(std::string path)
 {
-	std::cout << "la path passe par la = " + path << std::endl;
 	opendirectory(path);
 	readDirectory();
 	return (getIndex(path));
