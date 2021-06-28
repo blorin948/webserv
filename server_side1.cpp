@@ -110,9 +110,30 @@ t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
 	return res;
 }
 
-ServerConf		get_serv(std::vector<ServerConf*> serv, std::string host, int port)
+int		is_port(std::vector<int> port, int p)
 {
+	int i = 0;
 	
+	while (i != port.size())
+	{
+		if (port[i] == p)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+int		get_serv(std::vector<ServerConf*> serv, std::string host, int port)
+{
+	int i = serv.size();
+	int a = 0;
+	while (i)
+	{
+		if (serv[i - 1]->getName() == host && is_port(serv[i - 1]->getPort(), port))
+			a = i - 1;
+		i--;
+	}
+	return (a);
 }
 
 int main(int ac, char **av)
@@ -166,9 +187,8 @@ int main(int ac, char **av)
 		buffstr = buffer;
 		t_request req = parse_request(buffstr);
 		printAllRequest(req);
-		ServeurConf serv_req = get_serv(serv, req.host, req.port);
-		t_response res = parse_response(serv, 0, req);
-		find_request(res, req,  hello, serv[0]);
+		t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
+		find_request(res, req,  hello, serv[get_serv(serv, req.host, req.port)]);
 		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
     	close(new_socket);
 		hello.erase();
