@@ -138,7 +138,7 @@ std::string GetResponse::getErrorPage(t_response res)
 {
 	int code = res.code;
 	int i = 0;
-	std::cout << "dans l'erreur" << std::endl;
+	std::cout << "dans l'erreur" << code << std::endl;
 	while (i < res.errPages.size())
 	{
 		if (code == res.errPages[i].first)

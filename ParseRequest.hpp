@@ -10,7 +10,6 @@ class ParseRequest
 
 	public :
 
-	ParseRequest(std::vector <std::string> request);
 	ParseRequest();
 	ParseRequest(ParseRequest const &c);
 	ParseRequest &operator=(ParseRequest const &c);

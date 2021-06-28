@@ -56,4 +56,5 @@ int intlen(int i);
 std::string intToString(int i);
 void initResponse(t_response &t);
 void initRequest(t_request &t);
+void printAllRequest(t_request t);
 #endif

@@ -1,5 +1,5 @@
 #include "Webserv.h"
-#define PORT 8005
+#define PORT 8006
 #include "ErrorIndex.hpp"
 #include "GetResponse.hpp"
 #include "ParseRequest.hpp"
@@ -52,7 +52,6 @@ void find_request(t_response t, t_request req, std::string &response, ServerConf
 	{
 		do_post(t, req, response, serv);
 	}
-	//std::cout << i << std::endl;
 }
 
 std::string create_post(void)
@@ -62,28 +61,55 @@ std::string create_post(void)
 	return (post);
 }
 
-std::vector<ServerConf> create_server(char *conf)
+std::vector<ServerConf*> create_server(char *conf)
 {
 	std::ostringstream buf;
 	std::string file;
-	std::ifstream myfile("test.conf", std::ifstream::in);
-	std::vector<ServerConf> serv;
+	std::ifstream myfile(conf, std::ifstream::in);
+	std::vector<ServerConf*> serv;
 	if (!(myfile.is_open()))
-		throw "Error while opening conf file";
+	{
+		std::cout << "Error while opening conf file" << std::endl;
+		return serv;
+	}
 	while (getline(myfile, file))
 	{
 		buf << file;
 		buf << "\n";
 	}
 	file = buf.str();
-	while (file.find("server") != std::string::npos)
+	try
 	{
-		ServerConf t(file);
-		serv.push_back(t);
+		while (file.find("server") != std::string::npos)
+		{
+			ServerConf *t = new ServerConf(file);
+			serv.push_back(t);
+		}
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return serv;
 	}
 	return (serv);
 }
 
+t_request parse_request(std::string buffer)
+{
+	t_request req;
+	std::vector<std::string> requestTab = split_request(buffer);
+	ParseRequest request;
+	request.getRequest(req, requestTab);
+	return (req);
+}
+
+t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
+{
+	t_response res;
+	initResponse(res);
+	res = serv[i]->getReponse(res, req);
+	return res;
+}
 
 int main(int ac, char **av)
 {
@@ -92,15 +118,10 @@ int main(int ac, char **av)
 		std::cout << "Please use .conf file as argument." << std::endl;
 		return (0);
 	}
-	try
-	{
-		std::vector<ServerConf> serv = create_server(av[1]);
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		return (0);
-	}
+	std::vector<ServerConf*> serv;
+	serv = create_server(av[1]);
+	if (serv.size() == 0)
+		return 0;
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -113,7 +134,6 @@ int main(int ac, char **av)
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons( PORT );
-	
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
     {
@@ -140,21 +160,10 @@ int main(int ac, char **av)
         char buffer[300000] = {0};
         valread = read(new_socket , &buffer, 300000);
 		buffstr = buffer;
-		std::vector<std::string> requestTab = split_request(buffstr);
-		ParseRequest request(requestTab);
-		t_request req;
-		initRequest(req);
-		request.getRequest(req);
-		t_response res;
-
-		initResponse(res);
-		res = serv.getReponse(res, req);
-		//printResponse(res);
-		//std::cout.flush();
-		hello.erase();
-		std::cout << "SERVEER SIZE = " << serv.getLimit() << std::endl;
-		find_request(res, req,  hello, &serv);
-		//std::cout <<" reponse = " <<  hello << std::endl;
+		t_request req = parse_request(buffstr);
+		printAllRequest(req);
+		t_response res = parse_response(serv, 0, req);
+		find_request(res, req,  hello, serv[0]);
 		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
     	close(new_socket);
 		hello.erase();

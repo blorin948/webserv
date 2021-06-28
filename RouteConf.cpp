@@ -109,9 +109,7 @@ void RouteConf::parseUpload(std::string upload)
 	if (_uploadPath.size() > 0)
 	{
 		DIR *dir = opendir(_uploadPath.c_str());
-		if (dir && _uploadPath[_uploadPath.size() - 1] == '/')
-			std::cout << "CA EXISTE" << std::endl;
-		else
+		if (!(dir && _uploadPath[_uploadPath.size() - 1] == '/'))
 			throw std::runtime_error("Error with upload_path");
 	}
 }

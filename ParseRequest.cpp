@@ -1,14 +1,8 @@
 #include "ParseRequest.hpp"
 
-ParseRequest::ParseRequest(std::vector<std::string> request) : _request(request), _i(0), _code(0), _size(0), _port(0), _isUpload(false)
+ParseRequest::ParseRequest() : _i(0), _code(0), _size(0), _port(0), _isUpload(false)
 {
-	parseMethod();
-	parsePath();
-	parseHttp();
-	parseType("Content-Type:");
-	parseHost("Host:");
-	parseBody();
-	_size = getBodyLength();
+
 }
 
 int ParseRequest::getBodyLength(void)
@@ -21,29 +15,6 @@ int ParseRequest::getBodyLength(void)
 		i++;
 	}
 	return size;
-}
-ParseRequest::ParseRequest(void)
-{
-	
-}
-
-void ParseRequest::printAll(t_request t)
-{
-	int i = 0;
-	std::cout << "method = " << t.method << std::endl;
-	std::cout << "path = " << t.path << std::endl;
-	std::cout << "http = " << t.host << std::endl;
-	std::cout << "port = " << t.port << std::endl;
-	std::cout << "type = " << t.type << std::endl;
-	std::cout << "size = " << t.size << std::endl;
-	std::cout << "code = " << t.code << std::endl;
-	std::cout << "uploadName = " << t.uploadName << std::endl;
-	std::vector<std::string>::iterator it = _body.begin();
-	while (it != _body.end())
-	{
-		i = i + it->length();
-		std::cout << *it++ << std::endl;
-	}
 }
 
 void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
@@ -68,7 +39,6 @@ void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
 	t.isUpload = _isUpload;
 	t.body = _body;
 	t.uploadName = _uploadName;
-	t.size = _size;
 }
 
 void ParseRequest::parseHost(std::string host)

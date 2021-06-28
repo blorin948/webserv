@@ -29,6 +29,25 @@ t_response ServerConf::getReponse(t_response res, t_request req)
 	return (res);
 }
 
+void ServerConf::printAll(void)
+{
+	int i = 0;
+	std::cout << "size limit = " << _sizeLimit <<std::endl;
+	std::cout << "serv name = " << _servName<<std::endl;
+	std::cout << "root = " << _root <<std::endl;
+	while (i < _port.size())
+	{
+		std::cout << "port = " << _port[i] <<std::endl;
+		i++;
+	}
+	i = 0;
+	while (i < _errPages.size())
+	{
+		std::cout << " = " << _errPages[i].second <<std::endl;
+		i++;
+	}
+}
+
 void ServerConf::splitConfRoute(std::string location)
 {
 	int start = 0;
@@ -304,7 +323,7 @@ void ServerConf::parseSize(std::string size)
 	}
 	if (_sizeLimit == 0)
 		_sizeLimit = 500000000;
-	std::cout << _sizeLimit << std::endl;
+	//std::cout << _sizeLimit << std::endl;
 }
 
 void ServerConf::parsePort(std::string listen)
