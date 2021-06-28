@@ -46,8 +46,17 @@ void ParseRequest::printAll(t_request t)
 	}
 }
 
-void ParseRequest::getRequest(t_request &t)
+void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
 {
+	_request = req;
+	initRequest(t);
+	parseMethod();
+	parsePath();
+	parseHttp();
+	parseType("Content-Type:");
+	parseHost("Host:");
+	parseBody();
+	_size = getBodyLength();
 	t.method = _method;
 	t.size = _size;
 	t.path = _path;

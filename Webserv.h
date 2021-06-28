@@ -54,4 +54,6 @@ void printResponse(t_response t);
 int isWord(int i, int incr, std::string str);
 int intlen(int i);
 std::string intToString(int i);
+void initResponse(t_response &t);
+void initRequest(t_request &t);
 #endif

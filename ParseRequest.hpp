@@ -20,7 +20,7 @@ class ParseRequest
 	void parseHttp(void);
 	void parseBody(void);
 	void parseHost(std::string host);
-	void getRequest(t_request &t);
+	void getRequest(t_request &t, std::vector<std::string> req);
 	void printAll(t_request t);
 	void parseType(std::string type);
 

@@ -6,21 +6,7 @@
 #include "ServerConf.hpp"
 #include "PostResponse.hpp"
 
-void initResponse(t_response &t)
-{
-	t.code = 0;
-	t.autoindex = false;
-}
-
-void initRequest(t_request &t)
-{
-	t.size = 0;
-	t.port = 0;
-	t.code = 0;
-	t.isUpload = false;
-}
-
-std::vector<std::string> samerelapute(std::string buffer)
+std::vector<std::string> split_request(std::string buffer)
 {
 	std::vector<std::string> ok;
 	char	*str = new char [buffer.length() + 1];
@@ -76,37 +62,48 @@ std::string create_post(void)
 	return (post);
 }
 
-ServerConf openT()
+std::vector<ServerConf> create_server(char *conf)
 {
 	std::ostringstream buf;
 	std::string file;
 	std::ifstream myfile("test.conf", std::ifstream::in);
-	/*if (!(myfile.is_open()))
-		return NULL;*/
+	std::vector<ServerConf> serv;
+	if (!(myfile.is_open()))
+		throw "Error while opening conf file";
 	while (getline(myfile, file))
 	{
 		buf << file;
 		buf << "\n";
 	}
 	file = buf.str();
-	try
+	while (file.find("server") != std::string::npos)
 	{
 		ServerConf t(file);
-		return (t);
+		serv.push_back(t);
+	}
+	return (serv);
+}
+
+
+int main(int ac, char **av)
+{
+	if (ac != 2)
+	{
+		std::cout << "Please use .conf file as argument." << std::endl;
+		return (0);
+	}
+	try
+	{
+		std::vector<ServerConf> serv = create_server(av[1]);
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << e.what() << '\n';
+		return (0);
 	}
-}
-
-
-int main(int argc, char const *argv[])
-{
     int server_fd, new_socket; long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-	ServerConf serv = openT();
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -143,18 +140,11 @@ int main(int argc, char const *argv[])
         char buffer[300000] = {0};
         valread = read(new_socket , &buffer, 300000);
 		buffstr = buffer;
-		//std::cout << "true one = \n" << buffer << std::endl;
-		std::vector<std::string> ok = samerelapute(buffstr);
-		std::vector<std::string>::iterator it = ok.begin();
-		/*while (it != ok.end())
-		{
-			std::cout << *it++ << std::endl;
-		}*/
-		ParseRequest t(ok);
+		std::vector<std::string> requestTab = split_request(buffstr);
+		ParseRequest request(requestTab);
 		t_request req;
 		initRequest(req);
-		t.getRequest(req);
-		//t.printAll(req);
+		request.getRequest(req);
 		t_response res;
 
 		initResponse(res);
