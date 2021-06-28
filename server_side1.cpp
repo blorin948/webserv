@@ -1,6 +1,5 @@
 #include "Webserv.h"
 #define PORT 8006
-#include "ErrorIndex.hpp"
 #include "GetResponse.hpp"
 #include "ParseRequest.hpp"
 #include "ServerConf.hpp"
@@ -111,6 +110,11 @@ t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
 	return res;
 }
 
+ServerConf		get_serv(std::vector<ServerConf*> serv, std::string host, int port)
+{
+	
+}
+
 int main(int ac, char **av)
 {
 	if (ac != 2)
@@ -162,6 +166,7 @@ int main(int ac, char **av)
 		buffstr = buffer;
 		t_request req = parse_request(buffstr);
 		printAllRequest(req);
+		ServeurConf serv_req = get_serv(serv, req.host, req.port);
 		t_response res = parse_response(serv, 0, req);
 		find_request(res, req,  hello, serv[0]);
 		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
