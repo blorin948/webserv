@@ -4,6 +4,7 @@ void initResponse(t_response &t)
 {
 	t.code = 0;
 	t.autoindex = false;
+	t.can_upload = false;
 }
 
 void initRequest(t_request &t)

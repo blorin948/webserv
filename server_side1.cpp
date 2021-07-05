@@ -53,19 +53,12 @@ void find_request(t_response t, t_request req, std::string &response, ServerConf
 	}
 }
 
-std::string create_post(void)
-{
-	std::string post;
-	post.append("POST /index_example.html HTTP/1.1\nContent-type: text/html\nContent-length: 16\n\n<p>New File</p>");
-	return (post);
-}
-
-std::vector<ServerConf*> create_server(char *conf)
+std::vector<ServerConf *> create_server(char *conf)
 {
 	std::ostringstream buf;
 	std::string file;
 	std::ifstream myfile(conf, std::ifstream::in);
-	std::vector<ServerConf*> serv;
+	std::vector<ServerConf *> serv;
 	if (!(myfile.is_open()))
 	{
 		std::cout << "Error while opening conf file" << std::endl;
@@ -77,18 +70,12 @@ std::vector<ServerConf*> create_server(char *conf)
 		buf << "\n";
 	}
 	file = buf.str();
-	try
+	while (file.find("server") != std::string::npos)
 	{
-		while (file.find("server") != std::string::npos)
-		{
-			ServerConf *t = new ServerConf(file);
-			serv.push_back(t);
-		}
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		return serv;
+		ServerConf *t = new ServerConf(file);
+		if (serv.size() == 0)
+			t->setDefault(true);
+		serv.push_back(t);
 	}
 	return (serv);
 }
@@ -123,17 +110,211 @@ int		is_port(std::vector<int> port, int p)
 	return (0);
 }
 
+void reset_connection(std::vector<ServerConf*> serv)
+{
+	int i = 0;
+	while (i < serv.size())
+	{
+		serv[i]->set_can_accept_connection(false);
+		i++;
+	}
+}
+
 int		get_serv(std::vector<ServerConf*> serv, std::string host, int port)
 {
-	int i = serv.size();
+	int i = 0;
 	int a = 0;
-	while (i)
+	reset_connection(serv);
+	while (i < serv.size())
 	{
-		if (serv[i - 1]->getName() == host && is_port(serv[i - 1]->getPort(), port))
-			a = i - 1;
-		i--;
+		while (a < serv[i]->getPort().size())
+		{
+			if (port == serv[i]->getPort()[a])
+				serv[i]->set_can_accept_connection(true);
+			a++;
+		}
+		a = 0;
+		i++;
 	}
-	return (a);
+	i = 0;
+	while (i < serv.size())
+	{
+		if (serv[i]->get_can_accept_connection() == true)
+		{
+			if (serv[i]->getName().compare(host) == 0)
+				return (i);
+		}
+		i++;
+	}
+	i = 0;
+	while (i < serv.size())
+	{
+		if (serv[i]->get_can_accept_connection() == true)
+			return (i);
+		i++;
+	}
+	return (0);
+}
+
+std::vector<int> get_port_list(std::vector<ServerConf *> t)
+{
+	int i = 0;
+	std::vector<int> port_list;
+	int count = 0;
+	int a = 0;
+	while (i < t.size())
+	{
+		while (a < t[i]->getPort().size())
+		{
+			if (is_port(port_list, t[i]->getPort()[a]) == 0)
+				port_list.push_back(t[i]->getPort()[a]);
+			a++;
+		}
+		i++;
+		a = 0;
+	}
+	return port_list;
+}
+
+struct pollfd create_socket(int port, t_socket *t)
+{
+	struct pollfd fds;
+	int on = 1;
+	t->addrlen = sizeof(t->address);
+	t->port = port;
+	if ((t->socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+	{
+		perror("In socket");
+		exit(EXIT_FAILURE);
+	}
+	setsockopt(t->socket, SOL_SOCKET, SO_REUSEADDR,
+			   (char *)&on, sizeof(on));
+	if ((fcntl(t->socket, F_SETFL, O_NONBLOCK)) < 0)
+	{
+		perror("ioctl() failed");
+		close(t->socket);
+		exit(-1);
+	}
+	memset(&t->address, 0, sizeof(t->address));
+	t->address.sin_family = AF_INET;
+	t->address.sin_addr.s_addr = INADDR_ANY;
+	t->address.sin_port = htons(port);
+	memset(t->address.sin_zero, '\0', sizeof t->address.sin_zero);
+	if (bind(t->socket, (struct sockaddr *)&t->address, sizeof(t->address)) < 0)
+	{
+		perror("In bind");
+		exit(EXIT_FAILURE);
+	}
+	if (listen(t->socket, 32) < 0)
+	{
+		perror("In listen");
+		exit(EXIT_FAILURE);
+	}
+	fds.fd = t->socket;
+	fds.events = POLLIN;
+	return fds;
+}
+
+int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, struct pollfd *fds, t_socket *sock)
+{
+	int end_server = FALSE;
+	int new_socket;
+	long valread;
+	std::string hello;
+	std::string buffstr;
+	int count = port_list.size();
+	int a = 0;
+	int close_conn;
+	int rc = 0;
+	int current_size;
+	new_socket = -1;
+	int timeout = 1 * 60 * 1000;
+	do
+	{
+		rc = poll(fds, count, timeout);
+		current_size = count;
+		if (rc < 0)
+		{
+			perror("  poll() failed");
+			break;
+		}
+		if (rc == 0)
+		{
+			std::cout << "Timeout" << std::endl;
+			return 0;
+		}
+		for (a = 0; a < current_size; a++)
+		{
+			if (fds[a].revents == 0)
+				continue;
+			if (fds[a].revents != POLLIN)
+			{
+				printf("  Error! fdgrevents = %d\n", fds[a].revents);
+				end_server = TRUE;
+				break;
+			}
+			if (fds[a].fd == sock[a].socket)
+			{
+				do
+				{
+					printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+					new_socket = accept(sock[a].socket, NULL, NULL);
+					if (new_socket < 0)
+					{
+						if (errno != EWOULDBLOCK)
+						{
+							perror("  accept() failed");
+							end_server = TRUE;
+						}
+						break;
+					}
+					fds[count].fd = new_socket;
+					fds[count].events = POLLIN;
+					count++;
+				} while (new_socket != -1);
+			}
+			else
+			{
+				close_conn = FALSE;
+				char buffer[80000] = {0};
+				valread = recv(fds[a].fd, buffer, sizeof(buffer), 0);
+				std::cout << buffer << std::endl;
+				if (valread < 0)
+				{
+					if (errno != EWOULDBLOCK)
+					{
+						perror("  recv() failedfhgh");
+						close_conn = TRUE;
+					}
+					break;
+				}
+				if (valread == 0)
+				{
+					printf("  Connection closed\n");
+					close_conn = TRUE;
+				}
+				if (close_conn == FALSE)
+				{
+					buffstr = buffer;
+					t_request req = parse_request(buffstr);
+					printAllRequest(req);
+					t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
+					find_request(res, req, hello, serv[get_serv(serv, req.host, req.port)]);
+					valread = send(fds[a].fd, hello.c_str(), strlen(hello.c_str()), 0);
+					hello.erase();
+				}
+				if (valread < 0)
+				{
+					perror("  send() failed");
+					close_conn = TRUE;
+					break;
+				}
+				close(fds[a].fd);
+				fds[a].fd = -1;
+			}
+		}
+	} while (end_server == FALSE);
+	return 0;
 }
 
 int main(int ac, char **av)
@@ -143,55 +324,30 @@ int main(int ac, char **av)
 		std::cout << "Please use .conf file as argument." << std::endl;
 		return (0);
 	}
-	std::vector<ServerConf*> serv;
-	serv = create_server(av[1]);
+	int i = 0;
+	std::vector<ServerConf *> serv;
+	std::vector<int> port_list;
+	t_socket *sock;
+	struct pollfd fds[200];
+	try
+	{
+		serv = create_server(av[1]);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return (1);
+	}
 	if (serv.size() == 0)
 		return 0;
-    int server_fd, new_socket; long valread;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
-        perror("In socket");
-        exit(EXIT_FAILURE);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
-    memset(address.sin_zero, '\0', sizeof address.sin_zero);
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
-    {
-        perror("In bind");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 10) < 0)
-    {
-        perror("In listen");
-        exit(EXIT_FAILURE);
-    }
-	std::string hello;
-	std::string buffstr;
-	int i = 0;
-	char *str;
-    while(1)
-    {
-        printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-        {
-            perror("In accept");
-            exit(EXIT_FAILURE);
-        }
-        char buffer[300000] = {0};
-        valread = read(new_socket , &buffer, 300000);
-		buffstr = buffer;
-		t_request req = parse_request(buffstr);
-		printAllRequest(req);
-		t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
-		find_request(res, req,  hello, serv[get_serv(serv, req.host, req.port)]);
-		write(new_socket, hello.c_str(), strlen(hello.c_str()));                                                                                                            
-    	close(new_socket);
-		hello.erase();
-    }
-    return 0;	
+	port_list = get_port_list(serv);
+	sock = new t_socket[port_list.size()];
+	memset(fds, 0, sizeof(fds));
+	while (i < port_list.size())
+	{
+		fds[i] = create_socket(port_list[i], &sock[i]);
+		i++;
+	}
+	process_server(serv, port_list, fds, sock);
+	return 0;
 }

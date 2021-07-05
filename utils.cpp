@@ -53,3 +53,9 @@ void printAllRequest(t_request t)
 		std::cout << *it++ << std::endl;
 	}
 }
+
+bool IsPathExist(const std::string &s)
+{
+  struct stat buffer;
+  return (stat (s.c_str(), &buffer) == 0);
+}

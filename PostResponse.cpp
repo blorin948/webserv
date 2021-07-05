@@ -61,7 +61,10 @@ std::string PostResponse::makePost(t_request req, t_response res)
 		return (t.getErrorPage(res));
 	if (req.isUpload == true)
 	{
-		code = createFile(req, res);
+		if (res.can_upload == true)
+			code = createFile(req, res);
+		else
+			res.code = 409;
 	}
 	if (code != 201)
 		return (t.getErrorPage(res));

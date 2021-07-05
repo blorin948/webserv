@@ -46,6 +46,7 @@ class RouteConf
 	std::string _path;
 	unsigned int _sizeLimit;
 	bool _index;
+	bool _can_upload;
 	std::vector<std::string> _method;
 	std::string _rewrite;
 	std::string _defaultDir;

@@ -27,12 +27,25 @@ bool GetResponse::isDirectory(std::string path)
 
 std::string GetResponse::handle_dir(t_response res)
 {
+	if (IsPathExist(res.path) == 0)
+	{
+		res.code = 404;
+		return (getErrorPage(res));
+	}
 	if (res.autoindex == true)
 	{
-		AutoIndexGenerator t;
-		std::string ret;
-		_file = t.generateIndex(res.path);
-		return (setAll(200));
+		try
+		{
+			AutoIndexGenerator t;
+			std::string ret;
+			_file = t.generateIndex(res.path);
+			return (setAll(200));	
+		}
+		catch(const std::exception& e)
+		{
+			res.code = 404;
+			return (getErrorPage(res));
+		}
 	}
 	else if (res.defaultDir.empty() == 0)
 	{
@@ -41,8 +54,8 @@ std::string GetResponse::handle_dir(t_response res)
 	}
 	else
 	{
-		res.code = openFile(_defaultError);
-		return setAll(res.code);
+		res.code = 403;
+		return (getErrorPage(res));
 	}
 }
 
@@ -102,8 +115,9 @@ std::string GetResponse::redirectPage(t_response res)
 	setType();
 	setCode();
 	setLength();
-	std::string loc = "Location :" + res.location;
+	std::string loc = "Location: " + res.location;
 	ret =  "HTTP/1.1 301\n" +loc + "\n" +_type + "\n" + _length;
+	std::cout << "TEST SI REDIRECT = " << ret << std::endl;
 	return ret;
 }
 

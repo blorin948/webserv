@@ -1,6 +1,6 @@
 #include "ServerConf.hpp"
 
-ServerConf::ServerConf(std::string &conf) : _errorParsing(false), _sizeLimit(0)
+ServerConf::ServerConf(std::string &conf) : _errorParsing(false), _sizeLimit(0), _can_upload(false),  _default(false), _can_accept(false)
 {
 	int start = 0;
 	int length = 0;
@@ -10,6 +10,41 @@ ServerConf::ServerConf(std::string &conf) : _errorParsing(false), _sizeLimit(0)
 	conf.erase(0, end + start);
 	splitConfRoute("location");
 	parseAll();
+}
+
+void ServerConf::set_can_accept_connection(bool accept)
+{
+	_can_accept = accept;
+}
+
+bool ServerConf::get_can_accept_connection(void)
+{
+	return _can_accept;
+}
+
+void ServerConf::setDefault(bool defaulte)
+{
+	_default = defaulte;
+}
+
+t_response ServerConf::response_from_server(t_response res, t_request req)
+{
+	t_response t = res;
+	t.oldpath = req.path;
+	if (req.code > 0)
+	{
+		t.code = req.code;
+		t.method = "GET";
+		t.errPages = _errPages;
+		std::cout << "error 400" << std::endl;
+		return (t);
+	}
+	t.method = req.method;
+	req.path.erase(0, 1);
+	t.path = _root + req.path;
+	t.errPages = _errPages;
+	t.maxBodySize = _sizeLimit;
+	return (t);
 }
 
 t_response ServerConf::getReponse(t_response res, t_request req)
@@ -25,7 +60,7 @@ t_response ServerConf::getReponse(t_response res, t_request req)
 		i++;
 	}
 	if (i == _route.size())
-		std::cout << "direct Serv " << std::endl;
+		res = response_from_server(res, req);
 	return (res);
 }
 
@@ -147,23 +182,16 @@ void ServerConf::parseRoute(void)
 {
 	int nbRoute = _confRouteOnly.size();
 	int i = 0;
-	try
+	while (i < nbRoute)
 	{
-		while (i < nbRoute)
-		{
-			RouteConf *x = new RouteConf;
-			copyRoute(x, i);
-			_route.push_back(x);
-			_route[i]->parseLocation();
-			//_route[i]->printAll();
-			i++;
-		}
+		RouteConf *x = new RouteConf;
+		copyRoute(x, i);
+		_route.push_back(x);
+		_route[i]->parseLocation();
+		//_route[i]->printAll();
+		i++;
+	}
 	tri_bulle();
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
 }
 
 ServerConf::ServerConf(void)

@@ -58,8 +58,7 @@ void AutoIndexGenerator::opendirectory(std::string path)
 	_dir = opendir(path.c_str());
 	std::cout << path.c_str() << std::endl;
 	if (_dir == NULL)
-		std::cout << "error" << std::endl;
-
+		throw std::runtime_error("error with index");
 }
 
 AutoIndexGenerator::AutoIndexGenerator(AutoIndexGenerator const &c)

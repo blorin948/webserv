@@ -31,9 +31,13 @@ class ServerConf
 	void copyRoute(RouteConf *x, int i);
 	t_response getReponse(t_response res, t_request req);
 	void printAll(void);
+	void setDefault(bool defaulte);
+	void set_can_accept_connection(bool accept);
+	bool get_can_accept_connection(void);
 
 	private :
 
+	t_response response_from_server(t_response res, t_request req);
 	void orderRoute();
 	void tri_bulle();
 	void parseAll();
@@ -46,8 +50,11 @@ class ServerConf
 	int cut_conf(std::string conf, int &a, int &length);
 	int routeLength(int i);
 
+
 	bool _errorParsing;
 	bool _default;
+	bool _can_upload;
+	bool _can_accept;
 	unsigned int _sizeLimit;
 	std::string _conf;
 	std::string _servName;

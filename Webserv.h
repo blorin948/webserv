@@ -18,12 +18,18 @@
 #include <dirent.h>
 #include "vector"
 #include <sys/stat.h>
+#include <sys/poll.h>
+#include <errno.h>
+#include <netinet/in.h>
+#define TRUE             1
+#define FALSE            0
 
 typedef struct s_response
 {
 	int code;
 	std::string path;
 	bool autoindex;
+	bool can_upload;
 	std::vector <std::pair<int, std::string> > errPages;
 	unsigned int maxBodySize;
 	std::string body;
@@ -50,6 +56,15 @@ typedef struct s_request
 	int code;
 }				t_request;
 
+typedef struct s_socket
+{
+	int port;
+	int socket;
+	struct sockaddr_in address;
+	int addrlen;
+
+}t_socket;
+
 void printResponse(t_response t);
 int isWord(int i, int incr, std::string str);
 int intlen(int i);
@@ -57,4 +72,5 @@ std::string intToString(int i);
 void initResponse(t_response &t);
 void initRequest(t_request &t);
 void printAllRequest(t_request t);
+bool IsPathExist(const std::string &s);
 #endif

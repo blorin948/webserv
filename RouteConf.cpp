@@ -1,6 +1,6 @@
 #include "RouteConf.hpp"
 
-RouteConf::RouteConf(): _sizeLimit(0), _index(false), _sizePath(0)
+RouteConf::RouteConf(): _sizeLimit(0), _index(false), _sizePath(0), _can_upload(false)
 {
 	
 }
@@ -34,6 +34,7 @@ t_response RouteConf::getReponse(t_response res, t_request req)
 	t.maxBodySize = _sizeLimit;
 	t.defaultDir = _defaultDir;
 	t.uploadPath = _uploadPath;
+	t.can_upload = _can_upload;
 	return (t);
 }
 
@@ -44,7 +45,6 @@ std::string RouteConf::getPath(void)
 
 void RouteConf::setResPath(t_response &t, t_request req)
 {
-	int i = 0;
 	req.path.erase(0, 1);
 	t.path = _root + req.path;
 }
@@ -111,6 +111,8 @@ void RouteConf::parseUpload(std::string upload)
 		DIR *dir = opendir(_uploadPath.c_str());
 		if (!(dir && _uploadPath[_uploadPath.size() - 1] == '/'))
 			throw std::runtime_error("Error with upload_path");
+		else
+			_can_upload = true;
 	}
 }
 
