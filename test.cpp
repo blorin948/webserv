@@ -1,277 +1,74 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <sys/poll.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netinet/in.h>
-#include <errno.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-
-#define SERVER_PORT  12345
-
-#define TRUE             1
-#define FALSE            0
-
-struct pollfd create_socket(int port, int of, int &listen_sd)
+#include "Webserv.h"
+#include <map>
+ #include <sys/wait.h>
+char *newStr(std::string source)
 {
-	int    len, rc, on = 1;
-  int    new_sd = -1;
-  int    desc_ready, end_server = FALSE, compress_array = FALSE;
-  int    close_conn;
-  char   buffer[80];
-  struct sockaddr_in6   addr;
-  int    timeout;
-  struct pollfd fds[200];
-  int    nfds = 1, current_size = 0, i, j;
-	
-	listen_sd = socket(AF_INET, SOCK_STREAM, 0);
-  if (listen_sd < 0)
-  {
-    perror("socket() failed");
-    exit(-1);
-  }
+	char *res;
 
-  /*************************************************************/
-  /* Allow socket descriptor to be reuseable                   */
-  /*************************************************************/
-  rc = setsockopt(listen_sd, SOL_SOCKET,  SO_REUSEADDR,
-                  (char *)&on, sizeof(on));
-  if (rc < 0)
-  {
-    perror("setsockopt() failed");
-    close(listen_sd);
-    exit(-1);
-  }
-
-  /*************************************************************/
-  /* Set socket to be nonblocking. All of the sockets for      */
-  /* the incoming connections will also be nonblocking since   */
-  /* they will inherit that state from the listening socket.   */
-  /*************************************************************/
-  rc = fcntl(listen_sd, F_SETFL, O_NONBLOCK);
-  if (rc < 0)
-  {
-    perror("ioctl() failed");
-    close(listen_sd);
-    exit(-1);
-  }
-
-  /*************************************************************/
-  /* Bind the socket                                           */
-  /*************************************************************/
-  memset(&addr, 0, sizeof(addr));
-  addr.sin6_family      = AF_INET;
-  memcpy(&addr.sin6_addr, &in6addr_any, sizeof(in6addr_any));
-  addr.sin6_port        = htons(port);
-  rc = bind(listen_sd,
-            (struct sockaddr *)&addr, sizeof(addr));
-  if (rc < 0)
-  {
-    perror("bind() failed");
-    close(listen_sd);
-    exit(-1);
-  }
-
-  /*************************************************************/
-  /* Set the listen back log                                   */
-  /*************************************************************/
-  rc = listen(listen_sd, 32);
-  if (rc < 0)
-  {
-    perror("listen() failed");
-    close(listen_sd);
-    exit(-1);
-  }
-
-  /*************************************************************/
-  /* Initialize the pollfd structure                           */
-  /*************************************************************/
-  memset(fds, 0 , sizeof(fds));
-
-  /*************************************************************/
-  /* Set up the initial listening socket                        */
-  /*************************************************************/
-  fds[of].fd = listen_sd;
-  fds[of].events = POLLIN;
-  return fds[of];
+	if (!(res = (char *)malloc(sizeof(char) * (source.size() + 1))))
+		return (0);
+	for (size_t i = 0; i < source.size(); ++i)
+		res[i] = source[i];
+	res[source.size()] = 0;
+	return (res);
 }
 
-int main(int argc, char *argv[])
+
+
+char **convertParams(std::map<std::string, std::string> args)
 {
-  int    len, rc, on = 1;
-  int    new_sd = -1;
-  int    desc_ready, end_server = FALSE, compress_array = FALSE;
-  int    close_conn;
-  char   buffer[80];
-  struct sockaddr_in6   addr;
-  int    timeout;
-  struct pollfd fds[200];
-  int    nfds = 1, current_size = 0, i, j;
+	char **result;
+	std::map<std::string, std::string>::iterator it;
+	size_t i;
 
-	int listen_sd[2];
-
-  fds[0] = create_socket(8000, 0, listen_sd[0]);
-  fds[1] = create_socket(8001, 1, listen_sd[1]);
-  timeout = (3 * 60 * 1000);
-
-  do
-  {
-    printf("Waiting on poll()...\n");
-    rc = poll(fds, 2, timeout);
-    if (rc < 0)
-    {
-      perror("  poll() failed");
-      break;
-    }
-    if (rc == 0)
-    {
-      printf("  poll() timed out.  End program.\n");
-      break;
-    }
-    current_size = 2;
-    for (i = 0; i < current_size; i++)
-    {
-      if(fds[i].revents == 0)
-        continue;
-      if(fds[i].revents != POLLIN)
-      {
-        printf("  Error! revents = %d\n", fds[i].revents);
-        end_server = TRUE;
-        break;
-
-      }
-      if (fds[i].fd == listen_sd[1])
-      {
-        printf("  Listening socket is readable\n");
-        do
-        {
-          new_sd = accept(listen_sd[1], NULL, NULL);
-          if (new_sd < 0)
-          {
-            if (errno != EWOULDBLOCK)
-            {
-              perror("  accept() failed");
-              end_server = TRUE;
-            }
-            break;
-          }
-          printf("  New incoming connection - %d\n", new_sd);
-          fds[nfds].fd = new_sd;
-          fds[nfds].events = POLLIN;
-          nfds++;
-        } while (new_sd != -1);
-      }
-      else
-      {
-        printf("  Descriptor %d is readable\n", fds[i].fd);
-        close_conn = FALSE;
-        /*******************************************************/
-        /* Receive all incoming data on this socket            */
-        /* before we loop back and call poll again.            */
-        /*******************************************************/
-
-        do
-        {
-          /*****************************************************/
-          /* Receive data on this connection until the         */
-          /* recv fails with EWOULDBLOCK. If any other         */
-          /* failure occurs, we will close the                 */
-          /* connection.                                       */
-          /*****************************************************/
-          rc = recv(fds[i].fd, buffer, sizeof(buffer), 0);
-          if (rc < 0)
-          {
-            if (errno != EWOULDBLOCK)
-            {
-              perror("  recv()failed");
-              close_conn = TRUE;
-            }
-            break;
-          }
-
-          /*****************************************************/
-          /* Check to see if the connection has been           */
-          /* closed by the client                              */
-          /*****************************************************/
-          if (rc == 0)
-          {
-            printf("  Connection closed\n");
-            close_conn = TRUE;
-            break;
-          }
-
-          /*****************************************************/
-          /* Data was received                                 */
-          /*****************************************************/
-          len = rc;
-          printf("  %d bytes received\n", len);
-
-          /*****************************************************/
-          /* Echo the data back to the client                  */
-          /*****************************************************/
-          rc = send(fds[i].fd, buffer, len, 0);
-          if (rc < 0)
-          {
-            perror("  send() failed");
-            close_conn = TRUE;
-            break;
-          }
-
-        } while(TRUE);
-
-        /*******************************************************/
-        /* If the close_conn flag was turned on, we need       */
-        /* to clean up this active connection. This            */
-        /* clean up process includes removing the              */
-        /* descriptor.                                         */
-        /*******************************************************/
-        if (close_conn)
-        {
-          close(fds[i].fd);
-          fds[i].fd = -1;
-          compress_array = TRUE;
-        }
-
-
-      }  /* End of existing connection is readable             */
-    } /* End of loop through pollable descriptors              */
-
-    /***********************************************************/
-    /* If the compress_array flag was turned on, we need       */
-    /* to squeeze together the array and decrement the number  */
-    /* of file descriptors. We do not need to move back the    */
-    /* events and revents fields because the events will always*/
-    /* be POLLIN in this case, and revents is output.          */
-    /***********************************************************/
-    if (compress_array)
-    {
-      compress_array = FALSE;
-      for (i = 0; i < nfds; i++)
-      {
-        if (fds[i].fd == -1)
-        {
-          for(j = i; j < nfds; j++)
-          {
-            fds[j].fd = fds[j+1].fd;
-          }
-          i--;
-          nfds--;
-        }
-      }
-    }
-
-  } while (end_server == FALSE); /* End of serving running.    */
-
-  /*************************************************************/
-  /* Clean up all of the sockets that are open                 */
-  /*************************************************************/
-  for (i = 0; i < nfds; i++)
-  {
-    if(fds[i].fd >= 0)
-      close(fds[i].fd);
-  }
+	if (!(result = (char **)malloc(sizeof(char *) * (args.size() + 1))))
+		return (0);
+	it = args.begin();
+	i = 0;
+	while (it != args.end())
+	{
+		result[i++] = newStr(it->first + "=" + it->second);
+		++it;
+	}
+	result[args.size()] = 0;
+	return (result);
 }
 
+std::map<std::string, std::string>	initEnv() 
+{
+	std::map<std::string, std::string>	env;
+
+	 //Security needed to execute php-cgi
+	env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	env["SERVER_NAME"] = "localhost";
+	env["SCRIPT_FILENAME"] = "youpi.bla";
+	env["REQUEST_METHOD"] = "GET";
+	env["CONTENT_LENGTH"] = "1";
+	env["PATH_INFO"] = "youpi.bla";
+	env["SERVER_PROTOCOL"] = "HTTP/1.1";
+	env["QUERY_STRING"] = "?name=asd";
+	env["CONTENT_TYPE"] = "Content-Type: text/html";
+	/*this->_env["PATH_TRANSLATED"] = request.getPath(); //might need some change, using config path/contentLocation
+	this->_env["REMOTEaddr"] = to_string(config.getHostPort().host);
+	this->_env["REMOTE_IDENT"] = headers["Authorization"];
+	this->_env["REMOTE_USER"] = headers["Authorization"];
+	this->_env["REQUEST_URI"] = request.getPath() + request.getQuery();
+	if (headers.find("Hostname") != headers.end())
+	else
+		this->_env["SERVER_NAME"] = this->_env["REMOTEaddr"];
+	this->_env["SERVER_PORT"] = to_string(config.getHostPort().port);
+	this->_env["SERVER_SOFTWARE"] = "Weebserv/1.0";*/
+	return env;
+}
+
+int main()
+{
+	std::map<std::string, std::string>	env = initEnv();
+	char **Env = convertParams(env);
+	char **arg = {NULL};
+	int i = fork();
+	if (i == 0)
+	execve("cgi_tester", arg, Env);
+	else
+	wait(0);
+}

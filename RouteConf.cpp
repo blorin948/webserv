@@ -1,6 +1,6 @@
 #include "RouteConf.hpp"
 
-RouteConf::RouteConf(): _sizeLimit(0), _index(false), _sizePath(0), _can_upload(false)
+RouteConf::RouteConf(): _sizeLimit(0), _index(false), _sizePath(0), _can_upload(false), _isCgi(false)
 {
 	
 }
@@ -88,6 +88,38 @@ RouteConf::~RouteConf()
 
 }
 
+void RouteConf::parseCgi(std::string cgi)
+{
+	int i = 0;
+	std::string extension;
+	if ((i = _conf.find(cgi, i)) && i != std::string::npos)
+	{
+		if (isWord(i, cgi.length(), _conf))
+		{
+			i = i + cgi.length();	
+			while (isspace(_conf[i]))
+				i++;
+			while (isspace(_conf[i]) == 0)
+			{
+				extension.append(1, _conf[i]);
+				i++;
+			}
+		}
+		i++;
+	}
+	if (extension.size() > 0)
+	{
+		if (extension.compare(".bla") == 0)
+		{
+			std::cout << "blabla" << std::endl;
+			_isCgi = true;
+		}
+		else
+			throw std::runtime_error("Server accept only .bla cgi files");
+	}
+}
+
+
 void RouteConf::parseUpload(std::string upload)
 {
 	int i = 0;
@@ -116,6 +148,32 @@ void RouteConf::parseUpload(std::string upload)
 	}
 }
 
+void RouteConf::parseCgiPath(std::string cgi_path)
+{
+	int i = 0;
+	if ((i = _conf.find(cgi_path, i)) && i != std::string::npos)
+	{
+		if (isWord(i, cgi_path.length(), _conf))
+		{
+			i = i + cgi_path.length();	
+			while (isspace(_conf[i]))
+				i++;
+			while (isspace(_conf[i]) == 0)
+			{
+				_cgi_path.append(1, _conf[i]);
+				i++;
+			}
+		}
+		i++;
+	}
+}
+
+
+bool RouteConf::getIsCgi(void)
+{
+	return (_isCgi);
+}
+
 void RouteConf::parseLocation(void)
 {
 	parsePath();
@@ -125,6 +183,8 @@ void RouteConf::parseLocation(void)
 	parseIndex("default_dir");
 	parseRedirect("return");
 	parseUpload("upload_path");
+	parseCgi("cgi_extension");
+	parseCgiPath("cgi_path");
 }
 
 void RouteConf::parseRedirect(std::string redirect)
@@ -266,6 +326,10 @@ void RouteConf::parsePath()
 		i++;
 		_sizePath++;
 	}
+	if (_path[_path.size() - 1] != '/')
+	{
+		_path.append(1, '/');
+	}
 /*	std::cout << _path << std::endl;
 	std::cout << _sizePath << std::endl;*/
 }
@@ -326,6 +390,11 @@ std::string RouteConf::getRoot(void) const
 int RouteConf::getSizePath(void) const
 {
 	return (_sizePath);
+}
+
+std::string RouteConf::getServName(void) const
+{
+	return (_servName);
 }
 
 std::ostream &operator<<(std::ostream& out, RouteConf const &c)

@@ -1,6 +1,6 @@
 #include "ServerConf.hpp"
 
-ServerConf::ServerConf(std::string &conf) : _errorParsing(false), _sizeLimit(0), _can_upload(false),  _default(false), _can_accept(false)
+ServerConf::ServerConf(std::string &conf) :_i(0), _errorParsing(false), _sizeLimit(0), _can_upload(false),  _default(false), _can_accept(false)
 {
 	int start = 0;
 	int length = 0;
@@ -45,6 +45,18 @@ t_response ServerConf::response_from_server(t_response res, t_request req)
 	t.errPages = _errPages;
 	t.maxBodySize = _sizeLimit;
 	return (t);
+}
+
+bool ServerConf::isRoute(t_request req) const
+{
+	int i = 0;
+	while (i < _route.size())
+	{
+		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
+			return true;
+		i++;
+	}
+	return false;
 }
 
 t_response ServerConf::getReponse(t_response res, t_request req)
@@ -184,6 +196,7 @@ void ServerConf::parseRoute(void)
 	int i = 0;
 	while (i < nbRoute)
 	{
+		//std::cout << "lol" << std::endl;
 		RouteConf *x = new RouteConf;
 		copyRoute(x, i);
 		_route.push_back(x);
@@ -227,6 +240,21 @@ ServerConf::~ServerConf()
 
 ///////////////////////////////////////////////////////////////
 /////////////// GET FONCTIONS /////////////////////////////////
+
+RouteConf *ServerConf::getCurrentRoute(t_request req) const
+{
+	int i = 0;
+	while (i < _route.size())
+	{
+		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
+		{
+			return _route[i];
+			break ;
+		}
+		i++;
+	}
+	return (_route[_i]);
+}
 
 unsigned int ServerConf::getLimit() const
 {

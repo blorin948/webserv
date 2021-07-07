@@ -59,3 +59,15 @@ bool IsPathExist(const std::string &s)
   struct stat buffer;
   return (stat (s.c_str(), &buffer) == 0);
 }
+
+char *newStr(std::string source)
+{
+	char *res;
+
+	if (!(res = (char *)malloc(sizeof(char) * (source.size() + 1))))
+		return (0);
+	for (size_t i = 0; i < source.size(); ++i)
+		res[i] = source[i];
+	res[source.size()] = 0;
+	return (res);
+}

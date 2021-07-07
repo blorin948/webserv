@@ -73,4 +73,5 @@ void initResponse(t_response &t);
 void initRequest(t_request &t);
 void printAllRequest(t_request t);
 bool IsPathExist(const std::string &s);
+char *newStr(std::string source);
 #endif

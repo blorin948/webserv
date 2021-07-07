@@ -1,5 +1,4 @@
-SRCS	= GetRequest.cpp\
-	GetResponse.cpp\
+SRCS	= GetResponse.cpp\
 	ParseRequest.cpp\
 	PostResponse.cpp\
 	RouteConf.cpp\
@@ -8,6 +7,7 @@ SRCS	= GetRequest.cpp\
 	server_side1.cpp\
 	utils.cpp\
 	AutoIndexGenerator.cpp\
+	CgiMaker.cpp\
 
 OBJS	= $(SRCS:.cpp=.o)
 

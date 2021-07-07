@@ -34,6 +34,8 @@ class ServerConf
 	void setDefault(bool defaulte);
 	void set_can_accept_connection(bool accept);
 	bool get_can_accept_connection(void);
+	RouteConf *getCurrentRoute(t_request req) const;
+	bool isRoute(t_request req) const;
 
 	private :
 
@@ -55,6 +57,7 @@ class ServerConf
 	bool _default;
 	bool _can_upload;
 	bool _can_accept;
+	int _i;
 	unsigned int _sizeLimit;
 	std::string _conf;
 	std::string _servName;

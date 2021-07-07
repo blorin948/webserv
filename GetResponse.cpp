@@ -93,7 +93,6 @@ std::string GetResponse::getFullResponse(t_response res)
 		res.code = 301;
 		res.location = res.oldpath;
 		res.location.push_back('/');
-		std::cout << "redir de dir " + res.location << std::endl;
 	}
 	if (res.code == 301)
 		return (redirectPage(res));
@@ -117,7 +116,6 @@ std::string GetResponse::redirectPage(t_response res)
 	setLength();
 	std::string loc = "Location: " + res.location;
 	ret =  "HTTP/1.1 301\n" +loc + "\n" +_type + "\n" + _length;
-	std::cout << "TEST SI REDIRECT = " << ret << std::endl;
 	return ret;
 }
 

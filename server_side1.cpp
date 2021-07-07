@@ -4,7 +4,7 @@
 #include "ParseRequest.hpp"
 #include "ServerConf.hpp"
 #include "PostResponse.hpp"
-
+#include "CgiMaker.hpp"
 std::vector<std::string> split_request(std::string buffer)
 {
 	std::vector<std::string> ok;
@@ -92,7 +92,12 @@ t_request parse_request(std::string buffer)
 t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
 {
 	t_response res;
+	CgiMaker cgi;
 	initResponse(res);
+	if (serv[i]->isRoute(req) && (serv[i]->getCurrentRoute(req)->getIsCgi() == true) && cgi.is_cgi(req, serv[i]->getCurrentRoute(req)))
+	{
+		cgi.make_cgi(res, req, serv[i]->getCurrentRoute(req));
+	}
 	res = serv[i]->getReponse(res, req);
 	return res;
 }
