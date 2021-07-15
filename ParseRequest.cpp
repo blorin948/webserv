@@ -7,26 +7,28 @@ ParseRequest::ParseRequest() : _i(0), _code(0), _size(0), _port(0), _isUpload(fa
 
 int ParseRequest::getBodyLength(void)
 {
-	int i = 0 ;
-	int size = 0;
-	while (i < _body.size())
-	{
-		size = size + _body[i].length();
-		i++;
-	}
-	return size;
+	return _body.length();
 }
 
 void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
 {
 	_request = req;
+	int i = 0;
+/*	while (i < _request.size())
+	{
+		std::cout <<"dans le parsing = " <<  _request[i] << std::endl;
+		i++;
+	}*/
 	initRequest(t);
 	parseMethod();
 	parsePath();
 	parseHttp();
 	parseType("Content-Type:");
 	parseHost("Host:");
-	parseBody();
+	if (_isUpload == true)
+		parseBodyUpload();
+	else
+		parseBody();
 	_size = getBodyLength();
 	t.method = _method;
 	t.size = _size;
@@ -55,7 +57,6 @@ void ParseRequest::parseHost(std::string host)
 		}
 		i++;
 	}
-	std::cout << tmp << std::endl;
 	if (h != 1)
 	{
 		_code = 400;
@@ -82,12 +83,12 @@ void ParseRequest::parseHttp(void)
 {
 	while (isspace(_request[0][_i]))
 		_i++;
-	while (isspace(_request[0][_i]) == 0)
+	while (_i != _request[0].size() && isspace(_request[0][_i]) == 0)
 	{
 		_http.append(1, _request[0][_i]);
 		_i++;
 	}
-	std::cout << _http << std::endl;
+	//std::cout << _http << std::endl;
 	_i = 0;
 	if (_http.empty() || _path.empty() || _method.empty())
 		_code = 400;
@@ -104,7 +105,7 @@ void ParseRequest::parsePath(void)
 		_path.append(1, _request[0][_i]);
 		_i++;
 	}
-	//std::cout << _path << std::endl;
+//	std::cout << "path = "<<_path << std::endl;
 }
 
 void ParseRequest::parseMethod(void)
@@ -114,34 +115,42 @@ void ParseRequest::parseMethod(void)
 		_method.append(1, _request[0][_i]);
 		_i++;
 	}
-	//std::cout << _method << std::endl;
+	//std::cout << "meth = " <<_method << std::endl;
 }
 
 void ParseRequest::parseBody(void)
 {
 	int i = 0;
-	if (_method.compare("POST") == 0)
-	{
-		while (i < _request.size() && _request[i].compare(_boundary) != 0)
-			i++;
-	}
-	else
+	if (_method.compare("POST") != 0)
 		return ;
-	if (i < _request.size())
+	_body = _request[_request.size() - 1];
+}
+
+void ParseRequest::parseBodyUpload(void)
+{
+	int i = 0;
+	int start;
+	if (_method.compare("POST") != 0)
 	{
+		return ;
+	}
+	std::string reqBody = _request[_request.size() - 1];
 		// Get file name //
-		i++;
-		_uploadName = _request[i].substr(_request[i].find("filename=") + 9);
-		_uploadName.erase(0, 1);
-		_uploadName.resize(_uploadName.size() - 2);
-		i = i + 3;
-		// Get body of file //
-		while (i < _request.size() && _request[i].compare(_boundary) != 0)
+		i = reqBody.find("filename=");
+		i = i + 10;
+		while (i != reqBody.find("\"", i))
 		{
-			_body.push_back(_request[i]);
+			_uploadName.append(1, reqBody[i]);
 			i++;
 		}
-	}
+		i = reqBody.find("\n", i);
+		i++;
+		i = reqBody.find("\n", i);
+		i++;
+		start = i;
+		i = reqBody.find(_boundary, i);
+		// Get body of file //
+		_body = reqBody.substr(start, i - start);
 }
 
 void ParseRequest::parseType(std::string type)

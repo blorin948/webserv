@@ -119,10 +119,7 @@ std::string GetResponse::redirectPage(t_response res)
 	return ret;
 }
 
-int GetResponse::getName(void)
-{
 
-}
 
 void GetResponse::setType(void)
 {
@@ -186,6 +183,21 @@ int GetResponse::openFile(void)
 		buf << _file;
 	_file = buf.str();
 	return (0);
+}
+
+std::string GetResponse::setAllCgi(t_response res)
+{
+	std::string ret;
+	std::string length;
+	std::string strCode = intToString(res.code);	
+	int i = res.body.size();
+	std::cout << "test  " << res.body.size() <<std::endl;
+	std::stringstream ss;
+	ss << i;
+	length = "Content-Length: " + ss.str();
+	setCode();
+	ret =  "HTTP/1.1 " + strCode + "\n" +res.type + "\n" + length +  "\n\n" + res.body;
+	return ret;
 }
 
 std::string GetResponse::setAll(int code)

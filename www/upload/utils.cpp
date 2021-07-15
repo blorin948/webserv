@@ -1,3 +1,4 @@
+
 #include "Webserv.h"
 
 int intlen(int i)
@@ -66,3 +67,9 @@ char *newStr(std::string source)
 	res[source.size()] = 0;
 	return (res);
 }
+
+-----------------------------35599871678755532882088138597
+Content-Disposition: form-data; name="submit"
+
+Upload
+-----------------------------35599871678755532882088138597--

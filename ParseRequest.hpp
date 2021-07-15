@@ -17,6 +17,7 @@ class ParseRequest
 	void parseMethod(void);
 	void parsePath(void);
 	void parseHttp(void);
+	void parseBodyUpload(void);
 	void parseBody(void);
 	void parseHost(std::string host);
 	void getRequest(t_request &t, std::vector<std::string> req);
@@ -27,7 +28,7 @@ class ParseRequest
 	int getBodyLength(void);
 	std::vector <std::string> _request;
 	std::string _method;
-	std::vector <std::string> _body;
+	std::string _body;
 	std::string _path;
 	std::string _http;
 	std::string _host;

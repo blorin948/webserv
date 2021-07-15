@@ -8,6 +8,7 @@ SRCS	= GetResponse.cpp\
 	utils.cpp\
 	AutoIndexGenerator.cpp\
 	CgiMaker.cpp\
+	DeleteRequest.cpp\
 
 OBJS	= $(SRCS:.cpp=.o)
 

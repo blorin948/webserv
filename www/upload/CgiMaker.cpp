@@ -1,3 +1,4 @@
+
 #include "CgiMaker.hpp"
 
 CgiMaker::CgiMaker(void)
@@ -60,7 +61,12 @@ void CgiMaker::setQuery(t_request req)
 	if (req.method.compare("POST") == 0)
 	{
 		_length = intToString(req.body.size());
-		_body = req.body;
+		while (a < req.body.size())
+		{
+		std::cout << "llala" << std::endl;
+			_body += req.body[a];
+			a++;
+		}
 		return ;
 	}
 	int i = 0;
@@ -95,6 +101,7 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	FILE *in = tmpfile();
 	int fd_in = fileno(in);
 	int fd_out = fileno(out);
+	std::cout << "body = " << _body << std::endl;
 	write(fd_in, _body.c_str(), _body.length());
 	lseek(fd_in, 0, SEEK_SET);
 	int f = fork();
@@ -110,11 +117,11 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 		wait(0);
 		lseek(fd_out, 0, SEEK_SET);
 		int ret = 1;
+		memset(str, 0, 100);
 		while (ret > 0)
 		{
-		memset(str, 0, 100);
 			ret = read(fd_out, str, 100);
-			buffer.append(str);
+			buffer = buffer + str;
 		}
 	}
 	dup2(saveIn, STDIN_FILENO);
@@ -123,13 +130,8 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	close(fd_in);
 	close(saveOut);
 	close(saveIn);
-	_buffer = buffer;
+	std::cout << "|" << str << "|" <<std::endl;
 	return (1);
-}
-
-std::string CgiMaker::getBuffer(void) const
-{
-	return _buffer;
 }
 
 void CgiMaker::set_path(t_request req)
@@ -143,6 +145,7 @@ void CgiMaker::set_path(t_request req)
 	{
 		int i = req.path.find("?");
 		int a = 0;
+		std::cout << "sassaas = " <<req.path<< std::endl;
 		if (i != std::string::npos)
 		{
 			while (a < i)
@@ -156,74 +159,6 @@ void CgiMaker::set_path(t_request req)
 	}
 }
 
-std::string CgiMaker::parseType(std::string type)
-{
-	int i = 0;
-	std::string Restype;
-	if ((i = _buffer.find(type, i)) && i != std::string::npos)
-	{
-		if (isWord(i, type.length(), _buffer))
-		{
-			i = i + type.length();
-			while (isspace(_buffer[i]))
-				i++;
-			while (_buffer[i] != '\n')
-			{
-				Restype.append(1, _buffer[i]);
-				i++;
-			}
-		}
-		i++;
-	}
-	return Restype;
-}
-
-int CgiMaker::parseCode(std::string status)
-{
-	int i = 0;
-	std::string code;
-	i = _buffer.find(status, i);
-	if (i != std::string::npos)
-	{
-		i = _buffer.find(status, i);
-		if (isWord(i, status.length(), _buffer))
-		{
-			i = i + status.length();
-			while (isspace(_buffer[i]))
-				i++;
-			while (isspace(_buffer[i]) == 0)
-			{
-				code.append(1, _buffer[i]);
-				i++;
-			}
-		}
-		i++;
-	}
-	return atoi(code.c_str());
-}
-
-std::string CgiMaker::parseBody(void)
-{
-	int i = 0;
-	std::string body;
-	i = _buffer.find("\r\n\r\n");
-	i = i +4;
-	while (i < _buffer.size())
-	{
-		body.append(1, _buffer[i]);
-		i++;
-	}
-	return body;
-}
-
-t_response CgiMaker::parseCgi(t_response res)
-{
-	res.code = parseCode("Status:");
-	res.type = parseType("Content-Type:");
-	res.body = parseBody();
-	return res;
-}
-
 t_response CgiMaker::make_cgi(t_response res, t_request req, RouteConf* route)
 {
 	t_response t;
@@ -235,7 +170,6 @@ t_response CgiMaker::make_cgi(t_response res, t_request req, RouteConf* route)
 	setQuery(req);
 	create_env(req, route);
 	execute_cgi(req, route);
-	res = parseCgi(res);
 	return res;
 }
 

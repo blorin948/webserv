@@ -19,6 +19,7 @@
 #include "vector"
 #include <sys/stat.h>
 #include <sys/poll.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <netinet/in.h>
 #define TRUE             1
@@ -39,6 +40,8 @@ typedef struct s_response
 	std::string location;
 	std::string oldpath;
 	std::string uploadPath;
+	std::string cgiResponse;
+	std::string type;
 }				t_response;
 
 typedef struct s_request
@@ -46,7 +49,7 @@ typedef struct s_request
 	std::string method;
 	std::string path;
 	std::string http;
-	std::vector<std::string> body;
+	std::string body;
 	std::string host;
 	int port;
 	std::string type;

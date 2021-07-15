@@ -16,6 +16,7 @@ class GetResponse
 	void setType();
 	void setCode();
 	void setName();
+	std::string setAllCgi(t_response res);
 	std::string setAll(int code);
 	std::string getErrorPage(t_response res);
 	GetResponse(GetResponse const &c);

@@ -5,6 +5,7 @@
 #include "ServerConf.hpp"
 #include "PostResponse.hpp"
 #include "CgiMaker.hpp"
+#include "DeleteRequest.hpp"
 std::vector<std::string> split_request(std::string buffer)
 {
 	std::vector<std::string> ok;
@@ -12,17 +13,53 @@ std::vector<std::string> split_request(std::string buffer)
 	strcpy (str, buffer.c_str());
 	size_t a = 0;
 	size_t i = 0;
-	while (str[i])
+	std::string tmp;
+	std::string body;
+	i = buffer.find("\r\n\r\n");
+	if (i != std::string::npos)
 	{
-		if (str[i] == '\n')
-		{
-			str[i] = '\0';
-			ok.push_back(str + a);
-			a = i + 1;
-		}
-		i++;
+		body = buffer.substr(i + 4);
+		buffer.resize(i);
 	}
+	i = 0;
+	while (i < buffer.size() && i != std::string::npos)
+	{
+		if (i != std::string::npos)
+		{
+			tmp.clear();
+			while (i < buffer.size() && buffer[i] != '\r')
+			{
+				tmp.append(1, buffer[i]);
+				i++;
+			}
+			ok.push_back(tmp);
+		}
+		i = i + 2;
+	}
+	i = 0;
+	ok.push_back(body);
+//	std::cout << "safdssdfd = |" << ok[0] <<"|"<< std::endl;
 	return (ok);
+}
+
+int
+readn(int f, char *av, int n)
+{
+    char *a;
+    int m, t;
+
+    a = av;
+    t = 0;
+    while(t < n){
+        m = read(f, a+t, n-t);
+        if(m <= 0){
+            if(t == 0)
+                return m;
+            break;
+        }
+        t += m;
+    }
+    return t;
 }
 
 void do_get(t_response t, std::string &serv_response)
@@ -40,9 +77,31 @@ void do_post(t_response &res, t_request req,  std::string &serv_response, Server
 	serv_response = ok.makePost(req, res);
 }
 
+void do_cgi(t_response &res, std::string &serv_response)
+{
+	GetResponse t;
+	if (res.code != 200)
+	{
+		serv_response = t.getErrorPage(res);
+		return ;
+	}
+	serv_response = t.setAllCgi(res);
+
+}
+
+void do_delete(t_response &res, t_request req, std::string &serv_response)
+{
+	DeleteRequest t;
+	t.make_delete(req, res);
+}
 void find_request(t_response t, t_request req, std::string &response, ServerConf *serv)
 {
 	int i = 0;
+	if (t.cgiResponse.empty() == 0)
+	{
+		do_cgi(t, response);
+		return ;
+	}
 	if (t.method.compare("GET") == 0)
 	{
 		do_get(t, response);
@@ -50,6 +109,10 @@ void find_request(t_response t, t_request req, std::string &response, ServerConf
 	if (t.method.compare("POST") == 0)
 	{
 		do_post(t, req, response, serv);
+	}
+	if (t.method.compare("DELETE") == 0)
+	{
+		do_delete(t, req, response);
 	}
 }
 
@@ -84,6 +147,7 @@ t_request parse_request(std::string buffer)
 {
 	t_request req;
 	std::vector<std::string> requestTab = split_request(buffer);
+	int i = 0;
 	ParseRequest request;
 	request.getRequest(req, requestTab);
 	return (req);
@@ -96,7 +160,9 @@ t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
 	initResponse(res);
 	if (serv[i]->isRoute(req) && (serv[i]->getCurrentRoute(req)->getIsCgi() == true) && cgi.is_cgi(req, serv[i]->getCurrentRoute(req)))
 	{
-		cgi.make_cgi(res, req, serv[i]->getCurrentRoute(req));
+		res = cgi.make_cgi(res, req, serv[i]->getCurrentRoute(req));
+		res.cgiResponse = cgi.getBuffer();
+		return res;
 	}
 	res = serv[i]->getReponse(res, req);
 	return res;
@@ -282,8 +348,7 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 			{
 				close_conn = FALSE;
 				char buffer[80000] = {0};
-				valread = recv(fds[a].fd, buffer, sizeof(buffer), 0);
-				std::cout << buffer << std::endl;
+				valread = read(fds[a].fd, buffer, sizeof(buffer));
 				if (valread < 0)
 				{
 					if (errno != EWOULDBLOCK)
@@ -301,10 +366,12 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 				if (close_conn == FALSE)
 				{
 					buffstr = buffer;
+				//	std::cout << buffer << std::endl;
 					t_request req = parse_request(buffstr);
-					printAllRequest(req);
+				//	printAllRequest(req);
 					t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
 					find_request(res, req, hello, serv[get_serv(serv, req.host, req.port)]);
+					std::cout << "la = " << hello.c_str() << std::endl;
 					valread = send(fds[a].fd, hello.c_str(), strlen(hello.c_str()), 0);
 					hello.erase();
 				}

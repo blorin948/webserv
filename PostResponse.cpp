@@ -27,11 +27,7 @@ int PostResponse::createFile(t_request req, t_response res)
 	if (!file.good())
 		return 500;
 	int i = 0;
-	while (i < req.body.size())
-	{
-		file << req.body[i] << std::endl;
-		i++;
-	}
+	file << req.body;
 	return (201);
 }
 
