@@ -6,8 +6,12 @@ t_response DeleteRequest::make_delete(t_request req, t_response res)
 	i = remove(res.path.c_str());
 	if (i != 0)
 	{
-		
+		res.code = 404;
 	}
+	else
+		res.code = 200;
+	std::cout << "test" << std::endl;
+	return (res);
 }
 
 

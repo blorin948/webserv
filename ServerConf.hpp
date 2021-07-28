@@ -22,20 +22,20 @@ class ServerConf
 	ServerConf &operator=(ServerConf const &c);
 	~ServerConf();
 	void parseRoute();
+	void copyRoute(RouteConf *x, int i);
+	void printAll(void);
+	void setDefault(bool defaulte);
+	void set_can_accept_connection(bool accept);
+	bool isRoute(t_request req) const;
+	t_response getReponse(t_response res, t_request req);
+	RouteConf *getCurrentRoute(t_request req) const;
+	bool get_can_accept_connection(void);
 	unsigned int getLimit() const;
 	std::string getConfFile() const;
 	std::string getRoot() const;
 	std::string getName() const;
 	std::vector <int> getPort() const;
-	std::vector <std::pair<int, std::string> > getErrPages() const;
-	void copyRoute(RouteConf *x, int i);
-	t_response getReponse(t_response res, t_request req);
-	void printAll(void);
-	void setDefault(bool defaulte);
-	void set_can_accept_connection(bool accept);
-	bool get_can_accept_connection(void);
-	RouteConf *getCurrentRoute(t_request req) const;
-	bool isRoute(t_request req) const;
+	std::map <int, std::string> getErrPages() const;
 
 	private :
 
@@ -63,7 +63,7 @@ class ServerConf
 	std::string _servName;
 	std::string _root;
 	std::vector <int> _port;
-	std::vector <std::pair<int, std::string> > _errPages;
+	std::map <int, std::string> _errPages;
 	std::vector <RouteConf*> _route;
 	std::vector<std::string> _confRouteOnly;
 };

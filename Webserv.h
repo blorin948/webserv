@@ -22,6 +22,7 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <map>
 #define TRUE             1
 #define FALSE            0
 
@@ -31,7 +32,7 @@ typedef struct s_response
 	std::string path;
 	bool autoindex;
 	bool can_upload;
-	std::vector <std::pair<int, std::string> > errPages;
+	std::map <int, std::string> errPages;
 	unsigned int maxBodySize;
 	std::string body;
 	std::string method;

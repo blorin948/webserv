@@ -66,6 +66,7 @@ void do_get(t_response t, std::string &serv_response)
 {
 	GetResponse ok;
 	serv_response = ok.getFullResponse(t);
+//	std::cout << serv_response << std::endl;
 }
 
 void do_post(t_response &res, t_request req,  std::string &serv_response, ServerConf *serv)
@@ -86,33 +87,64 @@ void do_cgi(t_response &res, std::string &serv_response)
 		return ;
 	}
 	serv_response = t.setAllCgi(res);
+}
 
+void delete_succes_response(std::string &serv_response)
+{
+	serv_response.append("HTTP/1.1 200\n");
+	serv_response.append("<html><body><h1>File deleted.</h1></body></html>");
+}
+
+void delete_failure_response(std::string &serv_response)
+{
+	serv_response.append("HTTP/1.1 404\n");
+	serv_response.append("<html><body><h1>File not deleted.</h1></body></html>");
 }
 
 void do_delete(t_response &res, t_request req, std::string &serv_response)
 {
 	DeleteRequest t;
-	t.make_delete(req, res);
+	res = t.make_delete(req, res);
+	std::cout << res.code << std::endl;
+	if (res.code == 200)
+	{
+		delete_succes_response(serv_response);
+		std::cout << serv_response << std::endl;
+	}
+	else
+	{
+		delete_failure_response(serv_response);
+	}
 }
+
 void find_request(t_response t, t_request req, std::string &response, ServerConf *serv)
 {
 	int i = 0;
+	if (t.code >= 400)
+	{
+		do_get(t, response);
+		return ;
+	}
 	if (t.cgiResponse.empty() == 0)
 	{
+		
 		do_cgi(t, response);
 		return ;
 	}
 	if (t.method.compare("GET") == 0)
 	{
 		do_get(t, response);
+		return ;
 	}
 	if (t.method.compare("POST") == 0)
 	{
 		do_post(t, req, response, serv);
+		return ;
 	}
 	if (t.method.compare("DELETE") == 0)
 	{
 		do_delete(t, req, response);
+		return ;
 	}
 }
 
@@ -160,6 +192,7 @@ t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req)
 	initResponse(res);
 	if (serv[i]->isRoute(req) && (serv[i]->getCurrentRoute(req)->getIsCgi() == true) && cgi.is_cgi(req, serv[i]->getCurrentRoute(req)))
 	{
+		res.errPages = serv[i]->getErrPages();
 		res = cgi.make_cgi(res, req, serv[i]->getCurrentRoute(req));
 		res.cgiResponse = cgi.getBuffer();
 		return res;
@@ -368,10 +401,12 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 					buffstr = buffer;
 				//	std::cout << buffer << std::endl;
 					t_request req = parse_request(buffstr);
+					
 				//	printAllRequest(req);
+					
 					t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
 					find_request(res, req, hello, serv[get_serv(serv, req.host, req.port)]);
-					std::cout << "la = " << hello.c_str() << std::endl;
+				///	std::cout << "la = " << hello.c_str() << std::endl;
 					valread = send(fds[a].fd, hello.c_str(), strlen(hello.c_str()), 0);
 					hello.erase();
 				}

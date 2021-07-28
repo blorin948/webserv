@@ -88,9 +88,10 @@ void ServerConf::printAll(void)
 		i++;
 	}
 	i = 0;
-	while (i < _errPages.size())
+	std::map<int, std::string>::iterator it;
+	while (it != _errPages.end())
 	{
-		std::cout << " = " << _errPages[i].second <<std::endl;
+		std::cout << " = " << it->second <<std::endl;
 		i++;
 	}
 }
@@ -281,7 +282,7 @@ std::vector <int> ServerConf::getPort() const
 	return (_port);
 }
 
-std::vector <std::pair<int, std::string> > ServerConf::getErrPages() const
+std::map<int, std::string> ServerConf::getErrPages() const
 {
 	return (_errPages);
 }
@@ -302,17 +303,18 @@ void ServerConf::parseError(std::string error)
 			while (isspace(_conf[i]))
 				i++;
 			i = i + intlen(first);
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n' )
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
 				second.append(1, _conf[i]);
 				i++;
 			}
-			_errPages.push_back(std::make_pair(first, second));
+			if (first == 0 || second.empty())
+				throw std::runtime_error("Error with Error files");
+			_errPages.insert(std::pair<int, std::string>(first, second));
 			second.clear();
-			if (first == 0)
-			_errPages.pop_back();
+			
 		}
 	i++;
 	}
@@ -332,7 +334,7 @@ void ServerConf::parseName(std::string name)
 		if (isWord(i, name.length(), _conf))
 		{
 			i = i + name.length();
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -341,6 +343,8 @@ void ServerConf::parseName(std::string name)
 			}
 		}
 		i++;
+		if (_servName.empty())
+			throw std::runtime_error("Error with server name");
 	}
 	if (_servName.empty())
 		std::cout << "yapas" << std::endl;
@@ -355,7 +359,7 @@ void ServerConf::parseRoot(std::string root)
 		if (isWord(i, root.length(), _conf))
 		{
 			i = i + root.length();
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -364,6 +368,8 @@ void ServerConf::parseRoot(std::string root)
 			}
 		}
 		i++;
+		if (_root.empty())
+			throw std::runtime_error("Error with root");
 	}
 	//std::cout << _root << std::endl;
 }

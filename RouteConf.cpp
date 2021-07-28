@@ -148,26 +148,10 @@ void RouteConf::parseUpload(std::string upload)
 	}
 }
 
-void RouteConf::parseCgiPath(std::string cgi_path)
+std::string RouteConf::getCgiPath(void)
 {
-	int i = 0;
-	if ((i = _conf.find(cgi_path, i)) && i != std::string::npos)
-	{
-		if (isWord(i, cgi_path.length(), _conf))
-		{
-			i = i + cgi_path.length();	
-			while (isspace(_conf[i]))
-				i++;
-			while (isspace(_conf[i]) == 0)
-			{
-				_cgi_path.append(1, _conf[i]);
-				i++;
-			}
-		}
-		i++;
-	}
+	return (_cgi_path);
 }
-
 
 bool RouteConf::getIsCgi(void)
 {
@@ -192,10 +176,11 @@ void RouteConf::parseRedirect(std::string redirect)
 	int i = 0;
 	if ((i = _conf.find(redirect, i)) && i != std::string::npos)
 	{
+		
 		if (isWord(i, redirect.length(), _conf))
 		{
 			i = i + redirect.length();
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -203,7 +188,11 @@ void RouteConf::parseRedirect(std::string redirect)
 				i++;
 			}
 		}
-	i++;
+		i++;
+		if (_rewrite.empty())
+			throw std::runtime_error("Error with redirection");
+		if (_rewrite.compare(0, 7,"http://") != 0 && _rewrite.compare(0, 8,"https://") != 0)
+			throw std::runtime_error("Error with http redirection");
 	}
 }
 
@@ -216,7 +205,7 @@ void RouteConf::parseAutoindex(std::string autoindex)
 		if (isWord(i, autoindex.length(), _conf))
 		{
 			i = i + autoindex.length();		
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -225,6 +214,8 @@ void RouteConf::parseAutoindex(std::string autoindex)
 			}
 		}
 		i++;
+		if (index.empty())
+			throw std::runtime_error("Error with autoindex");
 	}
 	if (index.compare("on") == 0)
 		_index = true;
@@ -239,7 +230,7 @@ void RouteConf::parseIndex(std::string index)
 		if (isWord(i, index.length(), _conf))
 		{
 			i = i + index.length();	
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -248,8 +239,34 @@ void RouteConf::parseIndex(std::string index)
 			}
 		}
 		i++;
+		if (_defaultDir.empty())
+			throw std::runtime_error("Error with default directory");
 	}
-//	std::cout << _defaultDir << std::endl;
+}
+
+void RouteConf::parseCgiPath(std::string cgi)
+{
+	int i = 0;
+	if ((i = _conf.find(cgi, i)) && i != std::string::npos)
+	{
+		if (isWord(i, cgi.length(), _conf))
+		{
+			i = i + cgi.length();
+			_cgi_path.clear();
+			while (isspace(_conf[i]) && _conf[i] != '\n')
+				i++;
+			while (isspace(_conf[i]) == 0)
+			{
+				_cgi_path.append(1, _conf[i]);
+				i++;
+			}
+		}
+		i++;
+		std::cout << _cgi_path << std::endl;
+		if (_cgi_path.empty())
+			throw std::runtime_error("Error with cgi path");
+	}
+	std::cout << _cgi_path << std::endl;
 }
 
 void RouteConf::parseRoot(std::string root)
@@ -257,11 +274,11 @@ void RouteConf::parseRoot(std::string root)
 	int i = 0;
 	if ((i = _conf.find(root, i)) && i != std::string::npos)
 	{
+		_root.clear();
 		if (isWord(i, root.length(), _conf))
 		{
 			i = i + root.length();
-			_root.clear();		
-			while (isspace(_conf[i]))
+			while (isspace(_conf[i]) && _conf[i] != '\n')
 				i++;
 			while (isspace(_conf[i]) == 0)
 			{
@@ -269,9 +286,16 @@ void RouteConf::parseRoot(std::string root)
 				i++;
 			}
 		}
+		if (_root.empty())
+			throw std::runtime_error("Error with root");
 		i++;
 	}
 //	std::cout << _root << std::endl;
+}
+
+unsigned int RouteConf::getMaxBodySize(void) const
+{
+	return (_sizeLimit);
 }
 
 void RouteConf::parseMethod(std::string method)
@@ -280,12 +304,13 @@ void RouteConf::parseMethod(std::string method)
 	std::string str;
 	if ((i = _conf.find(method, i)) && i != std::string::npos)
 	{
+		str.clear();
 			if (isWord(i, method.length(), _conf))
 			{
 				i = i + method.length();
 				while (_conf[i] != '\n')
 				{
-					while (isspace(_conf[i]))
+					while (isspace(_conf[i]) && _conf[i] != '\n' )
 						i++;
 					while (isspace(_conf[i]) == 0)
 					{
@@ -293,9 +318,10 @@ void RouteConf::parseMethod(std::string method)
 						i++;
 					}
 					_method.push_back(str);
-					str.clear();
 				}
 			}
+			if (str.empty())
+				throw std::runtime_error("Error with method");
 		i++;
 	}
 	if (_method.empty())
@@ -343,7 +369,7 @@ void RouteConf::printAll(void)
 	std::cout << _servName << std::endl;
 	std::cout << _root << std::endl;
 	std::cout << _sizeLimit << std::endl;
-	std::vector<std::pair<int ,std::string> >::iterator it = _errPages.begin();
+	std::map<int ,std::string>::iterator it = _errPages.begin();
 	while (it != _errPages.end())
 	{
 		std::cout << it->first << "  " << it->second << std::endl;
@@ -372,7 +398,7 @@ void RouteConf::setPort(std::vector <int> port)
 	_port = port;
 }
 
-void RouteConf::setErrPages(std::vector <std::pair<int, std::string> > errPages)
+void RouteConf::setErrPages(std::map <int, std::string> errPages)
 {
 	_errPages = errPages;
 }

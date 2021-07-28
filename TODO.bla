@@ -1,0 +1,5 @@
+Rendre beton le parsing
+prevoir les cas derreur
+default path pour config
+fausse redirection
+cgi get marche pas bien, tester max size avec cgi get ?

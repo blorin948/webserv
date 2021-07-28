@@ -148,14 +148,17 @@ std::string GetResponse::getErrorPage(t_response res)
 	int code = res.code;
 	int i = 0;
 	std::cout << "dans l'erreur" << code << std::endl;
-	while (i < res.errPages.size())
+	std::map<int, std::string>::iterator it;
+	it = res.errPages.begin();
+		std::cout << "ici = " << res.errPages.size() << std::endl;
+	while (it != res.errPages.end())
 	{
-		if (code == res.errPages[i].first)
+		if (code == it->first)
 		{
-			openFile(res.errPages[i].second);
+			openFile(it->second);
 			return (setAll(code));
 		}
-		i++;
+		it++;
 	}
 	openFile(_defaultError);
 	return (setAll(code));

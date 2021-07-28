@@ -85,6 +85,10 @@ void CgiMaker::setQuery(t_request req)
 
 int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 {
+	if (_body.length() > route->getMaxBodySize())
+	{
+		throw (std::runtime_error("body too big"));
+	}
 	char **Env = mapToChar(_env);
 	char **arg = {NULL};
 	int saveIn = dup(STDIN_FILENO);
@@ -102,8 +106,14 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	{
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
-		execve("cgi_tester", arg, Env);
-		throw(std::runtime_error("c bon"));
+		execve(route->getCgiPath().c_str(), arg, Env);
+		dup2(saveIn, STDIN_FILENO);
+		dup2(saveOut, STDOUT_FILENO);
+		close(fd_out);
+		close(fd_in);
+		close(saveOut);
+		close(saveIn);
+		throw (std::runtime_error("bad cgi script"));
 	}
 	else
 	{
@@ -234,8 +244,22 @@ t_response CgiMaker::make_cgi(t_response res, t_request req, RouteConf* route)
 	_full_path += req.path;
 	setQuery(req);
 	create_env(req, route);
-	execute_cgi(req, route);
-	res = parseCgi(res);
+	try
+	{
+		execute_cgi(req, route);
+		res = parseCgi(res);
+	}
+	catch(const std::exception& e)
+	{
+		if (strcmp(e.what(), "bad cgi script") == 0 )
+		{
+			res.code = 500;
+		}
+		if (strcmp(e.what(), "body too big") == 0 )
+		{
+			res.code = 413;
+		}
+	}
 	return res;
 }
 
