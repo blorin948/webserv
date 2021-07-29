@@ -1,6 +1,6 @@
-#include "RouteConf.hpp"
+#include "includes/RouteConf.hpp"
 
-RouteConf::RouteConf(): _sizeLimit(0), _index(false), _sizePath(0), _can_upload(false), _isCgi(false)
+RouteConf::RouteConf(): _sizePath(0), _sizeLimit(0), _index(false),  _can_upload(false), _isCgi(false)
 {
 	
 }
@@ -19,7 +19,6 @@ t_response RouteConf::getReponse(t_response res, t_request req)
 		t.code = req.code;
 		t.method = "GET";
 		t.errPages = _errPages;
-		std::cout << "error 400" << std::endl;
 		return (t);
 	}
 	if (_rewrite.empty() == 0)
@@ -51,8 +50,7 @@ void RouteConf::setResPath(t_response &t, t_request req)
 
 void RouteConf::setResMethod(t_response &t, t_request req)
 {
-	int i = 0;
-	std::cout << _method.size() << std::endl;
+	unsigned long i = 0;
 	while (i < _method.size())
 	{
 		if (_method[i].compare(req.method) == 0)
@@ -90,7 +88,7 @@ RouteConf::~RouteConf()
 
 void RouteConf::parseCgi(std::string cgi)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string extension;
 	if ((i = _conf.find(cgi, i)) && i != std::string::npos)
 	{
@@ -110,10 +108,7 @@ void RouteConf::parseCgi(std::string cgi)
 	if (extension.size() > 0)
 	{
 		if (extension.compare(".bla") == 0)
-		{
-			std::cout << "blabla" << std::endl;
 			_isCgi = true;
-		}
 		else
 			throw std::runtime_error("Server accept only .bla cgi files");
 	}
@@ -122,7 +117,7 @@ void RouteConf::parseCgi(std::string cgi)
 
 void RouteConf::parseUpload(std::string upload)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(upload, i)) && i != std::string::npos)
 	{
 		if (isWord(i, upload.length(), _conf))
@@ -145,6 +140,7 @@ void RouteConf::parseUpload(std::string upload)
 			throw std::runtime_error("Error with upload_path");
 		else
 			_can_upload = true;
+		closedir(dir);
 	}
 }
 
@@ -173,7 +169,7 @@ void RouteConf::parseLocation(void)
 
 void RouteConf::parseRedirect(std::string redirect)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(redirect, i)) && i != std::string::npos)
 	{
 		
@@ -198,7 +194,7 @@ void RouteConf::parseRedirect(std::string redirect)
 
 void RouteConf::parseAutoindex(std::string autoindex)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string index;
 	if ((i = _conf.find(autoindex, i)) && i != std::string::npos)
 	{
@@ -224,7 +220,7 @@ void RouteConf::parseAutoindex(std::string autoindex)
 
 void RouteConf::parseIndex(std::string index)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(index, i)) && i != std::string::npos)
 	{
 		if (isWord(i, index.length(), _conf))
@@ -246,7 +242,7 @@ void RouteConf::parseIndex(std::string index)
 
 void RouteConf::parseCgiPath(std::string cgi)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(cgi, i)) && i != std::string::npos)
 	{
 		if (isWord(i, cgi.length(), _conf))
@@ -262,16 +258,14 @@ void RouteConf::parseCgiPath(std::string cgi)
 			}
 		}
 		i++;
-		std::cout << _cgi_path << std::endl;
 		if (_cgi_path.empty())
 			throw std::runtime_error("Error with cgi path");
 	}
-	std::cout << _cgi_path << std::endl;
 }
 
 void RouteConf::parseRoot(std::string root)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(root, i)) && i != std::string::npos)
 	{
 		_root.clear();
@@ -290,7 +284,6 @@ void RouteConf::parseRoot(std::string root)
 			throw std::runtime_error("Error with root");
 		i++;
 	}
-//	std::cout << _root << std::endl;
 }
 
 unsigned int RouteConf::getMaxBodySize(void) const
@@ -300,7 +293,7 @@ unsigned int RouteConf::getMaxBodySize(void) const
 
 void RouteConf::parseMethod(std::string method)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string str;
 	if ((i = _conf.find(method, i)) && i != std::string::npos)
 	{
@@ -330,14 +323,11 @@ void RouteConf::parseMethod(std::string method)
 		_method.push_back("POST");
 		_method.push_back("DELETE");
 	}
-	/*std::vector<std::string>::iterator it = _method.begin();
-	while (it != _method.end())
-		std::cout << "|" <<*it++ <<"|"<< std::endl;*/
 }
 
 void RouteConf::parsePath()
 {
-	int i = _conf.find("/");
+	unsigned long i = _conf.find("/");
 	if (i > _conf.find("{"))
 		throw std::runtime_error("Error with location block");
 	while (isspace(_conf[i]) == 0)
@@ -353,16 +343,11 @@ void RouteConf::parsePath()
 		_sizePath++;
 	}
 	if (_path[_path.size() - 1] != '/')
-	{
 		_path.append(1, '/');
-	}
-/*	std::cout << _path << std::endl;
-	std::cout << _sizePath << std::endl;*/
 }
 
 void RouteConf::printAll(void)
 {
-	std::cout << "ici la route" << std::endl;
 	std::vector<int>::iterator it1 = _port.begin();
 	while (it1 != _port.end())
 		std::cout << *it1++ << std::endl;

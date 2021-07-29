@@ -1,4 +1,4 @@
-#include "GetRequest.hpp"
+#include "includes/GetRequest.hpp"
 
 GetRequest::GetRequest(std::string buf) : _buffer(buf)
 {

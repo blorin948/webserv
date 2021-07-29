@@ -1,3 +1,5 @@
+$(VERBOSE).SILENT:
+
 SRCS	= GetResponse.cpp\
 	ParseRequest.cpp\
 	PostResponse.cpp\
@@ -9,14 +11,17 @@ SRCS	= GetResponse.cpp\
 	AutoIndexGenerator.cpp\
 	CgiMaker.cpp\
 	DeleteRequest.cpp\
+	do_method.cpp\
+	server_connection.cpp\
+	parse.cpp\
 
 OBJS	= $(SRCS:.cpp=.o)
 
-CC	= clang++
+CC =  clang++ -Wall -Wextra -Werror
 
-RM	= rm -f
+RM = rm -f
 
-NAME	= Webserv
+NAME = Webserv
 
 all:	$(NAME)
 

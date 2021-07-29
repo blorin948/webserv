@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <string.h>
-#include "Webserv.h"
+#include "includes/Webserv.h"
 #include <arpa/inet.h>
  #include <string.h>
 
-#define PORT 8006
+#define PORT 8008
 
 std::string make_request()
 {
@@ -51,7 +51,6 @@ int main(int argc, char const *argv[])
 	std::string str = make_request();
 	char hello[500];
 	strcpy(hello, str.c_str());
-	std::cout << hello << std::endl;
     char buffer[1024] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -76,7 +75,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
     send(sock , hello , strlen(hello) , 0 );
-	 shutdown(sock, SHUT_WR);
+	shutdown(sock, SHUT_WR);
     printf("Hello message sent\n");
     valread = read( sock , buffer, 1024);
     printf("%s\n",buffer );

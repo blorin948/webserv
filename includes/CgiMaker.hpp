@@ -14,7 +14,6 @@ class CgiMaker
 
 	CgiMaker();
 	CgiMaker(CgiMaker const &c);
-	CgiMaker &operator=(CgiMaker const &c);
 	~CgiMaker();
 	int isCgiFile(t_request req, RouteConf* route);
 	t_response make_cgi(t_response res, t_request req, RouteConf* route);
@@ -28,7 +27,7 @@ class CgiMaker
 	int parseCode(std::string status);
 	std::string parseType(std::string type);
 	std::string parseBody(void);
-	int execute_cgi(t_request req, RouteConf *route);
+	int execute_cgi(RouteConf *route);
 	void setQuery(t_request req);
 	void create_env(t_request req, RouteConf *route);
 	char **mapToChar(std::map<std::string, std::string> env);

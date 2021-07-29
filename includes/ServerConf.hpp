@@ -19,7 +19,6 @@ class ServerConf
 	ServerConf(std::string &conf);
 	ServerConf();
 	ServerConf(ServerConf const &c);
-	ServerConf &operator=(ServerConf const &c);
 	~ServerConf();
 	void parseRoute();
 	void copyRoute(RouteConf *x, int i);
@@ -50,7 +49,7 @@ class ServerConf
 	void parseSize(std::string size);
 	void parseError(std::string error);
 	int cut_conf(std::string conf, int &a, int &length);
-	int routeLength(int i);
+	int routeLength(unsigned long i);
 
 
 	bool _errorParsing;

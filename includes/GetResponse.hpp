@@ -20,7 +20,6 @@ class GetResponse
 	std::string setAll(int code);
 	std::string getErrorPage(t_response res);
 	GetResponse(GetResponse const &c);
-	GetResponse &operator=(GetResponse const &c);
 	~GetResponse();
 	int openFile();
 	bool isDirectory(std::string path);

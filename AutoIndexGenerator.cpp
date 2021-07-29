@@ -1,4 +1,4 @@
-#include "AutoIndexGenerator.hpp"
+#include "includes/AutoIndexGenerator.hpp"
 
 AutoIndexGenerator::AutoIndexGenerator(void)
 {
@@ -14,7 +14,6 @@ std::string AutoIndexGenerator::generateIndex(std::string path)
 
 std::string AutoIndexGenerator::getIndex(std::string path)
 {
-	int i = 0;
 	std::stringstream ss;
 	std::string ret;
 	ss << "<!DOCTYPE html>\n";
@@ -22,13 +21,15 @@ std::string AutoIndexGenerator::getIndex(std::string path)
 	{
 		ss << "<p><a style=text-decoration:none href= .. > . . </a></p>\n";
 	}
-	while (i < _allFile.size())
+	std::map<int, std::string>::iterator it;
+	it = _allFile.begin();
+	while (it != _allFile.end())
 	{
-		if (_allFile[i].first == DT_DIR)
-			ss << "<p><a href=" + _allFile[i].second + "/>" + _allFile[i].second + "/</a></p>\n";
+		if (it->first < 0)
+			ss << "<p><a href=" + it->second + "/>" + it->second + "/</a></p>\n";
 		else
-			ss << "<p><a href=" + _allFile[i].second + ">" + _allFile[i].second + "</a></p>\n";
-		i++; 
+			ss << "<p><a href=" + it->second + ">" + it->second + "</a></p>\n";
+		it++; 
 	}
 	ret = ss.str();
 	return ret;
@@ -37,17 +38,28 @@ std::string AutoIndexGenerator::getIndex(std::string path)
 void AutoIndexGenerator::readDirectory(void)
 {
 	int first;
+	int file = 1;
+	int dir = -1;
 	std::string second;
 	while ((_file = readdir(_dir)) != NULL)
 	{
 		if (_file->d_name[0] != '.')
 		{
-			first = _file->d_type;
+			if (_file->d_type == DT_DIR)
+			{
+				first = dir;
+				dir--;
+			}
+			else
+			{
+				first = file;
+				file++;
+			}
 			second = _file->d_name;
 			std::pair<int, std::string> tmp;
 			tmp.first = first;
 			tmp.second = second;
-			_allFile.push_back(tmp);
+			_allFile.insert(tmp);
 		}
 	}
 	//printall();
@@ -56,7 +68,6 @@ void AutoIndexGenerator::readDirectory(void)
 void AutoIndexGenerator::opendirectory(std::string path)
 {
 	_dir = opendir(path.c_str());
-	std::cout << path.c_str() << std::endl;
 	if (_dir == NULL)
 		throw std::runtime_error("error with index");
 }
@@ -66,12 +77,9 @@ AutoIndexGenerator::AutoIndexGenerator(AutoIndexGenerator const &c)
 	*this = c;
 }
 
-AutoIndexGenerator &AutoIndexGenerator::operator=(AutoIndexGenerator const &c)
-{
-	return (*this);
-}
-
 AutoIndexGenerator::~AutoIndexGenerator()
 {
-
+	_allFile.clear();
+	closedir(_dir);
+	delete _file;
 }

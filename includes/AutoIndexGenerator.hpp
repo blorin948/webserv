@@ -12,7 +12,6 @@ class AutoIndexGenerator
 
 	AutoIndexGenerator();
 	AutoIndexGenerator(AutoIndexGenerator const &c);
-	AutoIndexGenerator &operator=(AutoIndexGenerator const &c);
 	~AutoIndexGenerator();
 	void opendirectory(std::string path);
 	void readDirectory(void);
@@ -23,7 +22,7 @@ class AutoIndexGenerator
 
 	struct dirent *_file;
 	DIR *_dir;
-	std::vector<std::pair<int ,std::string> > _allFile;
+	std::map<int ,std::string> _allFile;
 
 };
 

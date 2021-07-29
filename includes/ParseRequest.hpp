@@ -12,7 +12,6 @@ class ParseRequest
 
 	ParseRequest();
 	ParseRequest(ParseRequest const &c);
-	ParseRequest &operator=(ParseRequest const &c);
 	~ParseRequest();
 	void parseMethod(void);
 	void parsePath(void);
@@ -35,7 +34,7 @@ class ParseRequest
 	int _port;
 	std::string _type;
 	int _size;
-	int _i;
+	unsigned long _i;
 	int _code;
 	bool _isUpload;
 	std::string _boundary;

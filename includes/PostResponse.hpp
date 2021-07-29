@@ -13,7 +13,6 @@ class PostResponse
 
 	PostResponse();
 	PostResponse(PostResponse const &c);
-	PostResponse &operator=(PostResponse const &c);
 	~PostResponse();
 	std::string makePost(t_request req, t_response res);
 	int createFile(t_request req, t_response res);

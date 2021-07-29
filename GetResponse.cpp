@@ -1,4 +1,4 @@
-#include "GetResponse.hpp"
+#include "includes/GetResponse.hpp"
 
 GetResponse::GetResponse() : _defaultError("Error/Default.html")
 {
@@ -16,11 +16,9 @@ void GetResponse::setName(void)
 
 bool GetResponse::isDirectory(std::string path)
 {
-	int i  = path.find_last_of("/");
+	unsigned long i = path.find_last_of("/");
 	if (i == path.size() -1)
-	{
 		return (true);
-	}
 	else
 	return false;
 }
@@ -39,7 +37,8 @@ std::string GetResponse::handle_dir(t_response res)
 			AutoIndexGenerator t;
 			std::string ret;
 			_file = t.generateIndex(res.path);
-			return (setAll(200));	
+			ret = setAll(200);
+			return (ret);	
 		}
 		catch(const std::exception& e)
 		{
@@ -99,7 +98,10 @@ std::string GetResponse::getFullResponse(t_response res)
 	else
 	{
 		if (isDirectory(res.path))
-			return (handle_dir(res));
+		{
+			std::string ret = handle_dir(res);
+			return (ret);
+		}
 		if ((res.code = openFile(res.path)) == 404)
 		{
 			return (getErrorPage(res));
@@ -124,7 +126,6 @@ std::string GetResponse::redirectPage(t_response res)
 void GetResponse::setType(void)
 {
 	_type = _name.substr(_name.find_last_of(".") + 1);
-	std::cout << _type << std::endl;
 	if (_type.empty())
 		_type = "html";
 	_type = "Content-Type: text/" + _type;
@@ -146,11 +147,8 @@ void GetResponse::setCode(void)
 std::string GetResponse::getErrorPage(t_response res)
 {
 	int code = res.code;
-	int i = 0;
-	std::cout << "dans l'erreur" << code << std::endl;
 	std::map<int, std::string>::iterator it;
 	it = res.errPages.begin();
-		std::cout << "ici = " << res.errPages.size() << std::endl;
 	while (it != res.errPages.end())
 	{
 		if (code == it->first)
@@ -194,7 +192,6 @@ std::string GetResponse::setAllCgi(t_response res)
 	std::string length;
 	std::string strCode = intToString(res.code);	
 	int i = res.body.size();
-	std::cout << "test  " << res.body.size() <<std::endl;
 	std::stringstream ss;
 	ss << i;
 	length = "Content-Length: " + ss.str();
@@ -219,12 +216,8 @@ GetResponse::GetResponse(GetResponse const &c)
 	*this = c;
 }
 
-GetResponse &GetResponse::operator=(GetResponse const &c)
-{
-	return (*this);
-}
-
 GetResponse::~GetResponse()
 {
-
+	_response.clear();
+	_request.clear();
 }

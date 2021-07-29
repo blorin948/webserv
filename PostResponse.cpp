@@ -1,4 +1,4 @@
-#include "PostResponse.hpp"
+#include "includes/PostResponse.hpp"
 
 
 PostResponse::PostResponse(void)
@@ -11,11 +11,6 @@ PostResponse::PostResponse(PostResponse const &c)
 	*this = c;
 }
 
-PostResponse &PostResponse::operator=(PostResponse const &c)
-{
-	return (*this);
-}
-
 PostResponse::~PostResponse()
 {
 
@@ -26,7 +21,6 @@ int PostResponse::createFile(t_request req, t_response res)
 	std::ofstream file(res.uploadPath + req.uploadName);
 	if (!file.good())
 		return 500;
-	int i = 0;
 	file << req.body;
 	return (201);
 }

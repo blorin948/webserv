@@ -1,4 +1,4 @@
-#include "Webserv.h"
+#include "includes/Webserv.h"
 
 int intlen(int i)
 {
@@ -37,7 +37,6 @@ void printResponse(t_response t)
 
 void printAllRequest(t_request t)
 {
-	int i = 0;
 	std::cout << "method = " << t.method << std::endl;
 	std::cout << "path = " << t.path << std::endl;
 	std::cout << "http = " << t.host << std::endl;
@@ -59,8 +58,7 @@ char *newStr(std::string source)
 {
 	char *res;
 
-	if (!(res = (char *)malloc(sizeof(char) * (source.size() + 1))))
-		return (0);
+	res = new char[source.size() + 1];
 	for (size_t i = 0; i < source.size(); ++i)
 		res[i] = source[i];
 	res[source.size()] = 0;

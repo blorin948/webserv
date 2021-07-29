@@ -1,0 +1,9 @@
+DELETE /upload/utils.cpp HTTP/1.1
+Host: localhost:8008
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:86.0) Gecko/20100101 Firefox/86.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Referer: http://localhost:8008/tmp/
+Upgrade-Insecure-Requests: 1

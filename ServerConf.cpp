@@ -1,6 +1,6 @@
-#include "ServerConf.hpp"
+#include "includes/ServerConf.hpp"
 
-ServerConf::ServerConf(std::string &conf) :_i(0), _errorParsing(false), _sizeLimit(0), _can_upload(false),  _default(false), _can_accept(false)
+ServerConf::ServerConf(std::string &conf) : _errorParsing(false),  _default(false), _can_upload(false), _can_accept(false) ,_i(0), _sizeLimit(0)
 {
 	int start = 0;
 	int length = 0;
@@ -36,7 +36,6 @@ t_response ServerConf::response_from_server(t_response res, t_request req)
 		t.code = req.code;
 		t.method = "GET";
 		t.errPages = _errPages;
-		std::cout << "error 400" << std::endl;
 		return (t);
 	}
 	t.method = req.method;
@@ -49,7 +48,7 @@ t_response ServerConf::response_from_server(t_response res, t_request req)
 
 bool ServerConf::isRoute(t_request req) const
 {
-	int i = 0;
+	unsigned long i = 0;
 	while (i < _route.size())
 	{
 		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
@@ -61,7 +60,7 @@ bool ServerConf::isRoute(t_request req) const
 
 t_response ServerConf::getReponse(t_response res, t_request req)
 {
-	int i = 0;
+	unsigned long i = 0;
 	while (i < _route.size())
 	{
 		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
@@ -76,32 +75,10 @@ t_response ServerConf::getReponse(t_response res, t_request req)
 	return (res);
 }
 
-void ServerConf::printAll(void)
-{
-	int i = 0;
-	std::cout << "size limit = " << _sizeLimit <<std::endl;
-	std::cout << "serv name = " << _servName<<std::endl;
-	std::cout << "root = " << _root <<std::endl;
-	while (i < _port.size())
-	{
-		std::cout << "port = " << _port[i] <<std::endl;
-		i++;
-	}
-	i = 0;
-	std::map<int, std::string>::iterator it;
-	while (it != _errPages.end())
-	{
-		std::cout << " = " << it->second <<std::endl;
-		i++;
-	}
-}
-
 void ServerConf::splitConfRoute(std::string location)
 {
-	int start = 0;
 	int length = 0;
-	int end = 0;
-	int i = 0;
+	unsigned long i = 0;
 	std::string route;
 	while ((i = _conf.find(location, i)) && i != std::string::npos)
 	{
@@ -121,7 +98,7 @@ void ServerConf::splitConfRoute(std::string location)
 	}
 }
 
-int ServerConf::routeLength(int i)
+int ServerConf::routeLength(unsigned long i)
 {
 	int length = i;
 	int col = 0;
@@ -172,7 +149,7 @@ void ServerConf::tri_bulle()
 {
     int passage = 0;
     bool permutation = true;
-    int en_cours;
+    unsigned long en_cours = 0;
     while ( permutation) 
 	{
         permutation = false;
@@ -197,16 +174,15 @@ void ServerConf::parseRoute(void)
 	int i = 0;
 	while (i < nbRoute)
 	{
-		//std::cout << "lol" << std::endl;
 		RouteConf *x = new RouteConf;
 		copyRoute(x, i);
 		_route.push_back(x);
 		_route[i]->parseLocation();
-		//_route[i]->printAll();
 		i++;
 	}
 	tri_bulle();
 }
+
 
 ServerConf::ServerConf(void)
 {
@@ -224,12 +200,6 @@ const char *ServerConf::ParseErrorException::what() const throw()
 	return ("No port on conf file");
 }
 
-
-ServerConf &ServerConf::operator=(ServerConf const &c)
-{
-	return (*this);
-}
-
 ServerConf::~ServerConf()
 {
 	_conf.clear();
@@ -237,6 +207,7 @@ ServerConf::~ServerConf()
 	_root.clear();
 	_port.clear();
 	_errPages.clear();
+	_route.clear();
 }
 
 ///////////////////////////////////////////////////////////////
@@ -244,7 +215,7 @@ ServerConf::~ServerConf()
 
 RouteConf *ServerConf::getCurrentRoute(t_request req) const
 {
-	int i = 0;
+	unsigned long i = 0;
 	while (i < _route.size())
 	{
 		if (req.path.compare(0, _route[i]->getPath().length(), _route[i]->getPath()) == 0)
@@ -291,7 +262,7 @@ std::map<int, std::string> ServerConf::getErrPages() const
 
 void ServerConf::parseError(std::string error)
 {
-	int i = 0;
+	unsigned long i = 0;
 	int first = 0;
 	std::string second;
 	while ((i = _conf.find(error, i)) && i != std::string::npos)
@@ -318,17 +289,11 @@ void ServerConf::parseError(std::string error)
 		}
 	i++;
 	}
-	/*std::vector<std::pair<int ,std::string> >::iterator it = _errPages.begin();
-	while (it != _errPages.end())
-	{
-		std::cout << it->first << "  " << it->second << std::endl;
-		it++;
-	}*/
 }
 
 void ServerConf::parseName(std::string name)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(name, i)) && i != std::string::npos)
 	{
 		if (isWord(i, name.length(), _conf))
@@ -346,14 +311,11 @@ void ServerConf::parseName(std::string name)
 		if (_servName.empty())
 			throw std::runtime_error("Error with server name");
 	}
-	if (_servName.empty())
-		std::cout << "yapas" << std::endl;
-	//std::cout << _servName << std::endl;
 }
 
 void ServerConf::parseRoot(std::string root)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(root, i)) && i != std::string::npos)
 	{
 		if (isWord(i, root.length(), _conf))
@@ -371,12 +333,11 @@ void ServerConf::parseRoot(std::string root)
 		if (_root.empty())
 			throw std::runtime_error("Error with root");
 	}
-	//std::cout << _root << std::endl;
 }
 
 void ServerConf::parseSize(std::string size)
 {
-	int i = 0;
+	unsigned long i = 0;
 	if ((i = _conf.find(size, i)) && i != std::string::npos)
 	{
 		if (isWord(i, size.length(), _conf))
@@ -385,21 +346,17 @@ void ServerConf::parseSize(std::string size)
 	}
 	if (_sizeLimit == 0)
 		_sizeLimit = 500000000;
-	//std::cout << _sizeLimit << std::endl;
 }
 
 void ServerConf::parsePort(std::string listen)
 {
-	int i = 0;
+	unsigned long i = 0;
 	while ((i = _conf.find(listen, i)) && i != std::string::npos)
 	{
 		if (isWord(i, listen.length(), _conf))
 			_port.push_back(atoi((_conf.c_str() + i + listen.length())));
 		i = i + listen.length();
 	}
-//	std::vector<int>::iterator it = _port.begin();
-	/*while (it != _port.end())
-		std::cout << *it++ << std::endl;*/
 	if (_port.empty())
 		throw ParseErrorException();
 }
@@ -410,7 +367,7 @@ void ServerConf::parsePort(std::string listen)
 int ServerConf::cut_conf(std::string conf, int &start, int &length)
 {
 	int col = 0;
-	int i = conf.find("server");
+	unsigned long i = conf.find("server");
 	if (i == std::string::npos)
 		return (0);
 	i = conf.find("{", i);

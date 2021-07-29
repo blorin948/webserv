@@ -1,6 +1,6 @@
-#include "ParseRequest.hpp"
+#include "includes/ParseRequest.hpp"
 
-ParseRequest::ParseRequest() : _i(0), _code(0), _size(0), _port(0), _isUpload(false)
+ParseRequest::ParseRequest() : _port(0), _size(0), _i(0), _code(0), _isUpload(false)
 {
 
 }
@@ -13,12 +13,6 @@ int ParseRequest::getBodyLength(void)
 void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
 {
 	_request = req;
-	int i = 0;
-/*	while (i < _request.size())
-	{
-		std::cout <<"dans le parsing = " <<  _request[i] << std::endl;
-		i++;
-	}*/
 	initRequest(t);
 	parseMethod();
 	parsePath();
@@ -45,7 +39,7 @@ void ParseRequest::getRequest(t_request &t, std::vector<std::string> req)
 
 void ParseRequest::parseHost(std::string host)
 {
-	int i = 0;
+	unsigned long i = 0;
 	int h = 0;
 	int tmp = 0;
 	while (i < _request.size())
@@ -76,7 +70,6 @@ void ParseRequest::parseHost(std::string host)
 		i++;
 		_port = atoi(_request[tmp].c_str() + i);
 	}
-	//std::cout << _host << " + " << _port<< std::endl;
 }
 
 void ParseRequest::parseHttp(void)
@@ -88,7 +81,6 @@ void ParseRequest::parseHttp(void)
 		_http.append(1, _request[0][_i]);
 		_i++;
 	}
-	//std::cout << _http << std::endl;
 	_i = 0;
 	if (_http.empty() || _path.empty() || _method.empty())
 		_code = 400;
@@ -105,7 +97,6 @@ void ParseRequest::parsePath(void)
 		_path.append(1, _request[0][_i]);
 		_i++;
 	}
-//	std::cout << "path = "<<_path << std::endl;
 }
 
 void ParseRequest::parseMethod(void)
@@ -115,12 +106,10 @@ void ParseRequest::parseMethod(void)
 		_method.append(1, _request[0][_i]);
 		_i++;
 	}
-	//std::cout << "meth = " <<_method << std::endl;
 }
 
 void ParseRequest::parseBody(void)
 {
-	int i = 0;
 	if (_method.compare("POST") != 0)
 		return ;
 	_body = _request[_request.size() - 1];
@@ -128,42 +117,36 @@ void ParseRequest::parseBody(void)
 
 void ParseRequest::parseBodyUpload(void)
 {
-	int i = 0;
+	unsigned long i = 0;
 	int start;
 	if (_method.compare("POST") != 0)
-	{
 		return ;
-	}
 	std::string reqBody = _request[_request.size() - 1];
-		// Get file name //
-		i = reqBody.find("filename=");
-		i = i + 10;
-		while (i != reqBody.find("\"", i))
-		{
-			_uploadName.append(1, reqBody[i]);
-			i++;
-		}
-		i = reqBody.find("\n", i);
+	// Get file name //
+	i = reqBody.find("filename=");
+	i = i + 10;
+	while (i != reqBody.find("\"", i))
+	{
+		_uploadName.append(1, reqBody[i]);
 		i++;
-		i = reqBody.find("\n", i);
-		i++;
-		start = i;
-		i = reqBody.find(_boundary, i);
-		// Get body of file //
-		_body = reqBody.substr(start, i - start);
+	}
+	i = reqBody.find("\n", i);
+	i++;
+	i = reqBody.find("\n", i);
+	i++;
+	start = i;
+	i = reqBody.find(_boundary, i);
+	// Get body of file //
+	_body = reqBody.substr(start, i - start);
 }
 
 void ParseRequest::parseType(std::string type)
 {
-	int i = 0;
+	unsigned long i = 0;
 	while (i < _request.size() && _request[i].find(type) != 0)
-	{
 		i++;
-	}
 	if (i == _request.size())
-	{
 		return ;
-	}
 	int tmp = i;
 	i = type.length();
 	_type.clear();
@@ -192,11 +175,6 @@ void ParseRequest::parseType(std::string type)
 ParseRequest::ParseRequest(ParseRequest const &c)
 {
 	*this = c;
-}
-
-ParseRequest &ParseRequest::operator=(ParseRequest const &c)
-{
-	return (*this);
 }
 
 ParseRequest::~ParseRequest()

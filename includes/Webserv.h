@@ -54,7 +54,7 @@ typedef struct s_request
 	std::string host;
 	int port;
 	std::string type;
-	int size;
+	unsigned long size;
 	bool isUpload;
 	std::string uploadName;
 	int code;
@@ -69,6 +69,8 @@ typedef struct s_socket
 
 }t_socket;
 
+class ServerConf;
+
 void printResponse(t_response t);
 int isWord(int i, int incr, std::string str);
 int intlen(int i);
@@ -78,4 +80,14 @@ void initRequest(t_request &t);
 void printAllRequest(t_request t);
 bool IsPathExist(const std::string &s);
 char *newStr(std::string source);
+void do_get(t_response t, std::string &serv_response);
+void do_post(t_response &res, t_request req,  std::string &serv_response, ServerConf *serv);
+void do_cgi(t_response &res, std::string &serv_response);
+void do_delete(t_response &res, std::string &serv_response);
+void reset_connection(std::vector<ServerConf*> serv);
+struct pollfd create_socket(int port, t_socket *t);
+std::vector<ServerConf *> create_server(char *conf);
+t_response parse_response(std::vector<ServerConf*> serv, int i, t_request req);
+t_request parse_request(std::string buffer);
+void check_bracer(char *str2);
 #endif

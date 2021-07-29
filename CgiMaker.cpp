@@ -1,4 +1,4 @@
-#include "CgiMaker.hpp"
+#include "includes/CgiMaker.hpp"
 
 CgiMaker::CgiMaker(void)
 {
@@ -7,13 +7,11 @@ CgiMaker::CgiMaker(void)
 
 int CgiMaker::isCgiFile(t_request req, RouteConf* route)
 {
-	int start = route->getPath().size();
-	int end;
-	int i = start;
+	unsigned long start = route->getPath().size();
+	unsigned long end;
+	unsigned long i = start;
 	while (i < req.path.size() && req.path[i] != '/' && req.path[i] != '?')
-	{
 		i++;
-	}
 	end = i;
 	i = req.path.find(".bla", start);
 	i = i + 4;
@@ -40,7 +38,6 @@ int CgiMaker::is_cgi(t_request req, RouteConf* route)
 
 void CgiMaker::create_env(t_request req, RouteConf* route)
 {
-	std::cout << "length = " << _path_WO_query <<std::endl;
 	_env["SERVER_SOFTWARE"] = "Webserv";
 	_env["SERVER_NAME"] = route->getServName();
 	_env["GATEWAY_INTERFACE"] = "CGI/1.1";
@@ -56,14 +53,13 @@ void CgiMaker::create_env(t_request req, RouteConf* route)
 
 void CgiMaker::setQuery(t_request req)
 {
-	int a = 0;
 	if (req.method.compare("POST") == 0)
 	{
 		_length = intToString(req.body.size());
 		_body = req.body;
 		return ;
 	}
-	int i = 0;
+	unsigned long i = 0;
 	i = req.path.find("?");
 	if (i == std::string::npos)
 	{
@@ -83,7 +79,7 @@ void CgiMaker::setQuery(t_request req)
 	_length = intToString(_query.size());
 }
 
-int CgiMaker::execute_cgi(t_request req, RouteConf *route)
+int CgiMaker::execute_cgi(RouteConf *route)
 {
 	if (_body.length() > route->getMaxBodySize())
 	{
@@ -93,6 +89,8 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	char **arg = {NULL};
 	int saveIn = dup(STDIN_FILENO);
 	int saveOut = dup(STDOUT_FILENO);
+	int i = 1;
+	int succes = 1;
 	char str[100];
 	std::string buffer;
 	FILE *out = tmpfile();
@@ -101,28 +99,34 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	int fd_out = fileno(out);
 	write(fd_in, _body.c_str(), _body.length());
 	lseek(fd_in, 0, SEEK_SET);
+	int es = 0;
 	int f = fork();
 	if (f == 0)
 	{
 		dup2(fd_in, STDIN_FILENO);
 		dup2(fd_out, STDOUT_FILENO);
 		execve(route->getCgiPath().c_str(), arg, Env);
-		dup2(saveIn, STDIN_FILENO);
-		dup2(saveOut, STDOUT_FILENO);
-		close(fd_out);
-		close(fd_in);
-		close(saveOut);
-		close(saveIn);
-		throw (std::runtime_error("bad cgi script"));
+		exit(1);
+		//throw (std::runtime_error("bad cgi script"));
 	}
 	else
 	{
-		wait(0);
+		int status;
+		if ( waitpid(f, &status, 0) == -1 ) 
+		{
+			perror("waitpid failed");
+			return EXIT_FAILURE;
+    	}
+		if ( WIFEXITED(status) ) 
+			es = WEXITSTATUS(status);
+		if (es == 1)
+			succes = 0;
+		//waitpid(-1, NULL, 0);
 		lseek(fd_out, 0, SEEK_SET);
 		int ret = 1;
 		while (ret > 0)
 		{
-		memset(str, 0, 100);
+			memset(str, 0, 100);
 			ret = read(fd_out, str, 100);
 			buffer.append(str);
 		}
@@ -134,7 +138,14 @@ int CgiMaker::execute_cgi(t_request req, RouteConf *route)
 	close(saveOut);
 	close(saveIn);
 	_buffer = buffer;
-	return (1);
+	i = 0;
+	while (Env[i])
+	{
+		delete[] Env[i];
+		i++;
+	}
+	delete[] Env;
+	return (succes);
 }
 
 std::string CgiMaker::getBuffer(void) const
@@ -151,8 +162,8 @@ void CgiMaker::set_path(t_request req)
 	}
 	else if (req.method.compare("GET") == 0)
 	{
-		int i = req.path.find("?");
-		int a = 0;
+		unsigned long i = req.path.find("?");
+		unsigned long a = 0;
 		if (i != std::string::npos)
 		{
 			while (a < i)
@@ -168,7 +179,7 @@ void CgiMaker::set_path(t_request req)
 
 std::string CgiMaker::parseType(std::string type)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string Restype;
 	if ((i = _buffer.find(type, i)) && i != std::string::npos)
 	{
@@ -190,7 +201,7 @@ std::string CgiMaker::parseType(std::string type)
 
 int CgiMaker::parseCode(std::string status)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string code;
 	i = _buffer.find(status, i);
 	if (i != std::string::npos)
@@ -214,7 +225,7 @@ int CgiMaker::parseCode(std::string status)
 
 std::string CgiMaker::parseBody(void)
 {
-	int i = 0;
+	unsigned long i = 0;
 	std::string body;
 	i = _buffer.find("\r\n\r\n");
 	i = i +4;
@@ -246,19 +257,19 @@ t_response CgiMaker::make_cgi(t_response res, t_request req, RouteConf* route)
 	create_env(req, route);
 	try
 	{
-		execute_cgi(req, route);
+		if (execute_cgi(route) == 0)
+		{
+			res.code = 500;
+			return res;
+		}
 		res = parseCgi(res);
 	}
 	catch(const std::exception& e)
 	{
 		if (strcmp(e.what(), "bad cgi script") == 0 )
-		{
 			res.code = 500;
-		}
 		if (strcmp(e.what(), "body too big") == 0 )
-		{
 			res.code = 413;
-		}
 	}
 	return res;
 }
@@ -270,8 +281,7 @@ char **CgiMaker::mapToChar(std::map<std::string, std::string> env)
 	std::map<std::string, std::string>::iterator it;
 	size_t i;
 
-	if (!(result = (char **)malloc(sizeof(char *) * (env.size() + 1))))
-		return (0);
+	result = new char*[env.size() + 1];
 	it = env.begin();
 	i = 0;
 	while (it != env.end())
@@ -288,12 +298,7 @@ CgiMaker::CgiMaker(CgiMaker const &c)
 	*this = c;
 }
 
-CgiMaker &CgiMaker::operator=(CgiMaker const &c)
-{
-	return (*this);
-}
-
 CgiMaker::~CgiMaker()
 {
-
+	_env.clear();
 }
