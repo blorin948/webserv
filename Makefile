@@ -17,7 +17,7 @@ SRCS	= GetResponse.cpp\
 
 OBJS	= $(SRCS:.cpp=.o)
 
-CC =  clang++ -Wall -Wextra -Werror
+CC =  clang++
 
 RM = rm -f
 

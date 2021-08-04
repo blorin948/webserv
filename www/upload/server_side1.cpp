@@ -1,3 +1,4 @@
+
 #include "includes/Webserv.h"
 #include "includes/GetResponse.hpp"
 #include "includes/ParseRequest.hpp"
@@ -119,12 +120,15 @@ int send_request(int fd, std::vector<ServerConf*> serv)
 	int valread = 0;
 	char buffer[8000];
 	std::string hello;
-	//memset(buffer, 0, 8000);
+	memset(buffer, 0, 8000);
 	std::string buffstr;
 	bool close_conn;
 	valread = read(fd, buffer, 8000);
 	if (valread < 0)
+	{
+	//	std::cout << "error " <<valread << std::endl;
 		return 0;
+	}
 	if (valread == 0)
 	{
 		std::cout << "closed " << std::endl;
@@ -135,14 +139,8 @@ int send_request(int fd, std::vector<ServerConf*> serv)
 	t_response res = parse_response(serv, get_serv(serv, req.host, req.port), req);
 	find_request(res, req, hello, serv[get_serv(serv, req.host, req.port)]);
 	valread = send(fd, hello.c_str(), strlen(hello.c_str()), 0);
-	if (valread < 0)
-		return 0;
-	if (valread == 0)
-	{
-		std::cout << "closed " << std::endl;
-		return 1;
-	}
 	hello.clear();
+	//std::cout << "LALALAL ERROR = " << k++<<std::endl;
 	return 1;
 }
 
@@ -168,7 +166,6 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 	{
 		//std::cout << count << std::endl;
 		rc = poll(fds, count, timeout);
-		std::cout << "test" << std::endl;
 		current_size = count;
 		if (rc < 0)
 		{
@@ -190,7 +187,8 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 				while (new_socket != -1)
 				{
 					new_socket = accept(sock[a].socket, NULL, NULL);
-					
+					if (new_socket == -1)
+					std::cout << "socket   =  " << new_socket << std::endl;
 					if (new_socket < 0)
 					{
 						if (errno != EWOULDBLOCK)
@@ -254,3 +252,4 @@ int main(int ac, char **av)
 	serv.clear();
 	return 0;
 }
+

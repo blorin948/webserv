@@ -44,7 +44,7 @@ struct pollfd create_socket(int port, t_socket *t)
 		perror("In bind");
 		exit(EXIT_FAILURE);
 	}
-	if (listen(t->socket, 32) < 0)
+	if (listen(t->socket, MAX_CONNECTION) < 0)
 	{
 		perror("In listen");
 		exit(EXIT_FAILURE);
