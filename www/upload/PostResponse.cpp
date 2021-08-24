@@ -1,3 +1,4 @@
+
 #include "includes/PostResponse.hpp"
 
 
@@ -64,7 +65,7 @@ std::string PostResponse::makePost(t_request req, t_response res)
 			return (t.getErrorPage(res));
 		}
 		else
-			return ("HTTP/1.1 200 OK\n\r\n\rBody saved");
+			return ("200 OK");
 	}
 	if (code != 201 && code != 200)
 		return (t.getErrorPage(res));

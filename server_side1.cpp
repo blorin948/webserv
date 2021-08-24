@@ -30,6 +30,7 @@ void find_request(t_response t, t_request req, std::string &response, ServerConf
 		do_cgi(t, response);
 		return ;
 	}
+	std::cout << t.method + " " << t.code<<  std::endl;
 	if (t.method.compare("GET") == 0)
 	{
 		do_get(t, response);
@@ -117,12 +118,11 @@ int isEmpty(char* str)
 int send_request(int fd, std::vector<ServerConf*> serv)
 {
 	int valread = 0;
-	char buffer[8000];
+	char buffer[80000];
 	std::string hello;
-	//memset(buffer, 0, 8000);
 	std::string buffstr;
 	bool close_conn;
-	valread = read(fd, buffer, 8000);
+	valread = read(fd, buffer, 80000);
 	if (valread < 0)
 		return 0;
 	if (valread == 0)
@@ -168,7 +168,6 @@ int process_server(std::vector<ServerConf*> serv, std::vector<int> port_list, st
 	{
 		//std::cout << count << std::endl;
 		rc = poll(fds, count, timeout);
-		std::cout << "test" << std::endl;
 		current_size = count;
 		if (rc < 0)
 		{
